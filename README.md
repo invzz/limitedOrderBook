@@ -1,2 +1,7 @@
 # limitedOrderBook
-Liumited Order Book in C
+
+Limited Order Book in C
+
+## build
+
+Build with `cmake build`
