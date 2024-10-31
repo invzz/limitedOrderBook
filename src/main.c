@@ -1,39 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
-#include <book.h>
+#include "book.h"
+#include "order.h"
 
-// Initialize market with an array of order books for multiple assets
-OrderBook market[NUM_ASSETS];
+#define NUM_OPERATIONS 10000 // Number of operations to perform in the test
 
-// Function to simulate random orders
-void simulate_market(int num_orders)
+// Function to perform stress testing on the order book
+void stress_test(OrderBook *order_book)
 {
-    srand(time(NULL));
-    int timestamp = 1;
+    // Variables for timing
+    clock_t start, end;
+    double cpu_time_used;
 
-    for (int i = 0; i < num_orders; i++)
+    // Add operations
+    start = clock();
+    for (int i = 0; i < NUM_OPERATIONS; i++)
     {
-        int asset_id = rand() % NUM_ASSETS;                       // Randomly pick an asset
-        double price = 90 + rand() % 20 + (rand() % 100) / 100.0; // Random price between 90 and 110
-        int quantity = (rand() % 10) + 1;                         // Random quantity between 1 and 10
-        int is_bid = rand() % 2;                                  // Randomly pick bid (1) or ask (0)
-
-        printf("\n--- Order %d ---\n", i + 1);
-        add_order_to_book(&market[asset_id], i + 1, price, quantity, timestamp++, is_bid);
+        Order order = {i, rand() % 100 + 1, i, NULL}; // Random quantity and timestamp
+        order_book->add_order(order_book, order);
     }
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Added %d orders in %.2f seconds. Operations per second: %.2f\n",
+           NUM_OPERATIONS, cpu_time_used, NUM_OPERATIONS / cpu_time_used);
+
+    // Matching operations
+    start = clock();
+    for (int i = 0; i < NUM_OPERATIONS; i++)
+    {
+        Order buy_order = {NUM_OPERATIONS + i, rand() % 100 + 1, i, NULL}; // Buy order
+        Order sell_order = {i, rand() % 100 + 1, i, NULL};                 // Sell order
+        order_book->add_order(order_book, sell_order);                     // Add sell order
+        order_book->add_order(order_book, buy_order);                      // Add buy order
+        // Add simple matching logic here (pseudo-code)
+        // match_orders(order_book, buy_order, sell_order); // Match buy/sell orders
+    }
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Matched %d orders in %.2f seconds. Operations per second: %.2f\n",
+           NUM_OPERATIONS, cpu_time_used, NUM_OPERATIONS / cpu_time_used);
+
+    // Remove operations
+    start = clock();
+    for (int i = 0; i < NUM_OPERATIONS; i++)
+    {
+        order_book->remove_order(order_book, i); // Removing orders by ID
+    }
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Removed %d orders in %.2f seconds. Operations per second: %.2f\n",
+           NUM_OPERATIONS, cpu_time_used, NUM_OPERATIONS / cpu_time_used);
 }
 
-// Main function
 int main()
 {
-    // Initialize empty market for each asset
-    for (int i = 0; i < NUM_ASSETS; i++)
-    {
-        market[i].bids = NULL;
-        market[i].asks = NULL;
-    }
+    // Seed the random number generator
+    srand(time(NULL));
 
-    printf("Simulating market with %d assets and 20 random orders...\n", NUM_ASSETS);
-    simulate_market(20);
+    // Create hybrid order book
+    int capacity = 100; // Define the capacity of the hash map
+    OrderBook *order_book = create_hybrid_order_book(capacity);
+
+    // Run the stress test
+    stress_test(order_book);
+
+    // Clean up
+    destroy_order_book(order_book);
 
     return 0;
 }
