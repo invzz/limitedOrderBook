@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.10)  # Adjust version as necessary
 project(OrderBook)
 
+include(cmake/automate-vcpkg.cmake)
+
+vcpkg_bootstrap()
+vcpkg_integrate_install()
+vcpkg_install_packages(cmocka)
+
+find_package(cmocka CONFIG REQUIRED)
+
 
 # Specify output directory for the executable
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
@@ -23,6 +31,3 @@ add_executable(order_book src/main.c)
 
 # Link the linked list sources to the executable
 target_sources(order_book PRIVATE ${HASH_MAP_SRC})
-
-# # Link the hash map sources to the executable
-# target_sources(order_book PRIVATE ${HASH_MAP_SRC})
