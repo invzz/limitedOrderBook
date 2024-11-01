@@ -1,33 +1,53 @@
-cmake_minimum_required(VERSION 3.10)  # Adjust version as necessary
+cmake_minimum_required(VERSION 3.10)
 project(OrderBook)
 
-include(cmake/automate-vcpkg.cmake)
 
-vcpkg_bootstrap()
-vcpkg_integrate_install()
-vcpkg_install_packages(cmocka)
-
-find_package(cmocka CONFIG REQUIRED)
-
-
-# Specify output directory for the executable
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
-
-# Specify the C standard
-set(CMAKE_C_STANDARD 11)  # Use C11, adjust if needed
-
-# Specify include directories
+# Include directories
 include_directories(inc)
 
-# Create a variable for the hash map source files
-set(HASH_MAP_SRC
-    src/hashmap/book.c
-    src/hashmap/order.c
-    src/hashmap/structs.c
+
+# Add source files for the OrderBook library
+set(ORDER_BOOK_SOURCES
+    src/orderBook.cc
+    src/order.cc
+    src/priceLevel.cc
 )
 
-# Create an executable target
-add_executable(order_book src/main.c)
+# Create the OrderBook library
+add_library(OrderBookLib ${ORDER_BOOK_SOURCES})
 
-# Link the linked list sources to the executable
-target_sources(order_book PRIVATE ${HASH_MAP_SRC})
+# Find and link spdlog
+find_package(spdlog CONFIG REQUIRED)
+target_link_libraries(OrderBookLib PRIVATE spdlog::spdlog)
+
+# Create the main application
+add_executable(OrderBookApp app/main.cc)
+
+# Link the OrderBook library to the application
+target_link_libraries(OrderBookApp PRIVATE OrderBookLib spdlog::spdlog)
+
+find_package(GTest CONFIG REQUIRED)
+
+# Add tests
+enable_testing()
+file(GLOB TEST_SOURCES "test/*.cc")
+
+
+foreach(TEST_SOURCE ${TEST_SOURCES})
+    # Get the filename without the path or extension to name the executable
+    get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+
+    # Add an executable for each test source file
+    add_executable(${TEST_NAME} ${TEST_SOURCE})
+
+    # Link each test executable to the OrderBook library and GTest
+    target_link_libraries(${TEST_NAME} PRIVATE OrderBookLib GTest::gtest)
+
+    # Link spdlog to each test executable if needed
+    target_link_libraries(${TEST_NAME} PRIVATE spdlog::spdlog)
+
+    # Register each test with CTest
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+endforeach()
+
+
