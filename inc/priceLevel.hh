@@ -21,7 +21,7 @@ class PriceLevel
   // setter
   void setPrice(double newPrice) { price = newPrice; }
   void setOrders(std::vector<Order *> newOrders) { orders = newOrders; }
-  void fillOrder(Order *order)
+  void removeOrder(Order *order)
   {
     orders.erase(std::remove(orders.begin(), orders.end(), order),
                  orders.end());

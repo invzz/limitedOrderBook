@@ -3,7 +3,8 @@
 
 void OrderBook::addOrder(Order *new_order)
 {
-  auto &levels =
+  std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
+  auto                       &levels =
     (new_order->getType() == OrderType::BUY) ? buy_orders : sell_orders;
 
   if(levels.find(new_order->getPrice()) == levels.end())
@@ -80,8 +81,11 @@ void OrderBook::matchBuySellOrders(PriceLevel *buy_level,
     {
       for(auto sellOrder : sellOrders)
         {
+          if(buyOrder->getUserId() == sellOrder->getUserId()) { break; }
           if(buyOrder->getQuantity() <= 0)
-            break; // No need to match if the buy order is filled
+            {
+              break;
+            } // No need to match if the buy order is filled
 
           // Calculate the quantity to trade
           int quantityTraded =
@@ -93,16 +97,17 @@ void OrderBook::matchBuySellOrders(PriceLevel *buy_level,
 
           spdlog::info(
             "[ Matched ] {} order ID {} with {} order ID {}: {} units traded "
-            "at price {}",
+            "at price {} buyer {}, seller {}",
             (buyOrder->getType() == OrderType::BUY) ? "BUY" : "SELL",
             buyOrder->getId(),
             (sellOrder->getType() == OrderType::BUY) ? "BUY" : "SELL",
-            sellOrder->getId(), quantityTraded, sellOrder->getPrice());
+            sellOrder->getId(), quantityTraded, sellOrder->getPrice(),
+            buyOrder->getUserId(), sellOrder->getUserId());
 
           // Remove filled orders
           if(sellOrder->getQuantity() == 0)
             {
-              sell_level->fillOrder(
+              sell_level->removeOrder(
                 sellOrder); // Remove from sell level if filled
             }
         }
@@ -110,7 +115,7 @@ void OrderBook::matchBuySellOrders(PriceLevel *buy_level,
       // If the buy order is filled, no need to check further
       if(buyOrder->getQuantity() == 0)
         {
-          buy_level->fillOrder(buyOrder); // Remove from buy level if filled
+          buy_level->removeOrder(buyOrder); // Remove from buy level if filled
         }
     }
 }

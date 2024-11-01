@@ -2,7 +2,9 @@
 #include <cassert>
 
 // Constructor
-Order::Order(int id, OrderType type, double price, int quantity) : id(id), type(type), price(price), quantity(quantity) {}
+Order::Order(int id, OrderType type, double price, int quantity, int userId)
+    : id(id), type(type), price(price), quantity(quantity), userId(userId)
+{}
 
 // Getters
 int Order::getId() const { return id; }
@@ -26,7 +28,7 @@ void Order::setQuantity(int newQuantity) { quantity = newQuantity; }
 void Order::updateQuantity(int delta)
 {
   quantity += delta;
- // Quantity should not go below zero
+  // Quantity should not go below zero
   if(quantity < 0)
     {
       quantity = 0; // Prevent negative quantities

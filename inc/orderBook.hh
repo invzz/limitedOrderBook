@@ -5,6 +5,7 @@
 #include "priceLevel.hh"
 #include <map>
 #include <memory>
+#include <mutex>
 
 class OrderBook
 {
@@ -27,6 +28,7 @@ class OrderBook
   private:
   std::map<double, std::unique_ptr<PriceLevel>> buy_orders;
   std::map<double, std::unique_ptr<PriceLevel>> sell_orders;
+  std::mutex                                    mtx;
 };
 
 #endif // ORDER_BOOK_HH

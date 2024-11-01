@@ -236,7 +236,8 @@
             "xutility": "cpp",
             "deque": "cpp",
             "queue": "cpp",
-            "ranges": "cpp"
+            "ranges": "cpp",
+            "random": "cpp"
         },
         "cmake.debugConfig": {
             "args": [],

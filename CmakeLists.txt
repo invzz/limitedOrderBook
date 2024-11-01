@@ -21,7 +21,7 @@ find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(OrderBookLib PRIVATE spdlog::spdlog)
 
 # Create the main application
-add_executable(OrderBookApp app/main.cc)
+add_executable(OrderBookApp app/market.cc)
 
 # Link the OrderBook library to the application
 target_link_libraries(OrderBookApp PRIVATE OrderBookLib spdlog::spdlog)

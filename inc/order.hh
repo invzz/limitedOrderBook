@@ -8,19 +8,21 @@ class Order
 {
   private:
   int       id;
+  int       userId;
   OrderType type;
   double    price;
   int       quantity;
 
   public:
   // Constructor
-  Order(int id, OrderType type, double price, int quantity);
+  Order(int id, OrderType type, double price, int quantity, int userId);
 
   // Getters
   int       getId() const;
   OrderType getType() const;
   double    getPrice() const;
   int       getQuantity() const;
+  int       getUserId() const { return userId; }
 
   // Setters
   void setId(int newId);
