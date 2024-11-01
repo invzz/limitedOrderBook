@@ -10,7 +10,7 @@ include_directories(inc)
 set(ORDER_BOOK_SOURCES
     src/orderBook.cc
     src/order.cc
-    src/priceLevel.cc
+    src/orderBookServer.cc
 )
 
 # Create the OrderBook library
