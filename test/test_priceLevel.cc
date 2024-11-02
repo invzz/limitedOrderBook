@@ -1,5 +1,6 @@
 #include "priceLevel.hh"
 #include <gtest/gtest.h>
+#include <spdlog/spdlog.h>
 // Create a simple Order for testing
 std::unique_ptr<Order> createOrder(OrderType type, double price, int quantity, int userId) { return std::make_unique<Order>(type, price, quantity, userId); }
 
@@ -20,6 +21,7 @@ TEST(PriceLevelTest, AddAndRemoveOrder)
 
 int main(int argc, char **argv)
 {
+  spdlog::set_level(spdlog::level::critical);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

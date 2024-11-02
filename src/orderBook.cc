@@ -67,7 +67,7 @@ void OrderBook::match(std::map<int, double> &gainsLosses)
                       gainsLosses[buyOrder->getUserId()] += gainLoss;  // Update gain/loss for the buyer
                       gainsLosses[sellOrder->getUserId()] -= gainLoss; // Update gain/loss for the seller
 
-                      spdlog::info("[ Matched ] [ BUY {:03} ] [ SELL {:03} ] : [ {:03} ] at price [ {:.2f} ]", buyOrder->getId(), sellOrder->getId(),
+                      spdlog::debug("[ OrderBook ]::[MATCH!] :: [ BUY {:03} ] [ SELL {:03} ] : [ {:03} ] at price [ {:.2f} ]", buyOrder->getId(), sellOrder->getId(),
                                    quantityTraded, sell_price);
 
                       // Remove filled orders

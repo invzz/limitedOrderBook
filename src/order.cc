@@ -1,10 +1,6 @@
 #include "order.hh"
 #include <cassert>
 
-
-
-
-
 // Update quantity by a specified delta
 void Order::updateQuantity(int delta)
 {

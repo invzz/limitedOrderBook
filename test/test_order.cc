@@ -1,6 +1,6 @@
 #include "order.hh"
 #include <gtest/gtest.h>
-
+#include <spdlog/spdlog.h>
 TEST(OrderTest, OrderCreation)
 {
   Order order(OrderType::BUY, 100, 10, 42);
@@ -21,6 +21,7 @@ TEST(OrderTest, UpdateQuantity)
 
 int main(int argc, char **argv)
 {
+  spdlog::set_level(spdlog::level::critical);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

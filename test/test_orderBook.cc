@@ -74,9 +74,9 @@ TEST(OrderBookTest, MatchMultipleOrders)
   ASSERT_EQ(orderBook.getBuyOrders()[100]->getOrders().front()->getQuantity(), 5);
   ASSERT_TRUE(orderBook.getSellOrders().empty()); // User 3 should be filled
 
-  ASSERT_EQ(gainsLosses[1], -1000); // User 1 should have lost 50
+  ASSERT_EQ(gainsLosses[1], -1000); // User 1 should have lost 1000
   ASSERT_EQ(gainsLosses[2], 0);   // User 2 should have no gain/loss
-  ASSERT_EQ(gainsLosses[3], 1000);  // User 3 should have gained 50
+  ASSERT_EQ(gainsLosses[3], 1000);  // User 3 should have gained 1000
 }
 
 TEST(OrderBookTest, HandleNegativeQuantity)
@@ -109,6 +109,7 @@ TEST(OrderBookTest, RemoveFilledOrders)
 
 int main(int argc, char **argv)
 {
+  spdlog::set_level(spdlog::level::critical);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

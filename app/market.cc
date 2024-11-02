@@ -5,14 +5,14 @@
 #include <vector>
 #include <random>
 
-void botFunction(OrderBookServer &server, int userId, int numOrders)
+void simulateOrderPlacement(OrderBookServer &server, int userId, int numOrders)
 {
   for(int i = 0; i < numOrders; ++i)
     {
       // create a random order
       std::mt19937                           rng(std::random_device{}());
       std::uniform_int_distribution<int>     quantity_dist(1, 100);
-      std::uniform_real_distribution<double> price_dist(1.0, 110.0);
+      std::uniform_real_distribution<double> price_dist(80.0, 110.0);
       std::uniform_int_distribution<int>     type_dist(0, 1); // 0 for BUY, 1 for SELL
 
       OrderType type     = (type_dist(rng) == 0) ? OrderType::BUY : OrderType::SELL;
@@ -36,10 +36,12 @@ int main()
 
   // Define number of bots and orders per bot
   int numBots      = 10;
-  int ordersPerBot = 100;
+  int ordersPerBot = 1000;
 
   std::vector<std::thread> bots;
-  for(int i = 0; i < numBots; ++i) { bots.emplace_back(botFunction, std::ref(server), i + 1, ordersPerBot); }
+  for(int i = 0; i < numBots; ++i) { bots.emplace_back(simulateOrderPlacement, std::ref(server), i + 1, ordersPerBot); }
+
+  spdlog::info("bots are starting to place orders...");
 
   // Wait for all bots to finish
   for(auto &bot : bots) { bot.join(); }
@@ -47,7 +49,7 @@ int main()
   spdlog::info("All bots have finished placing orders.");
 
   // print bot positions
-  server.printBotPositions();
+  server.printPositions();
 
   // server.match(); no needed, match is done real time
   return 0;
