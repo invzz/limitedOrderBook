@@ -39,7 +39,7 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
 //     for(const auto &order : level.second->getOrders()) { spdlog::info("Order ID: {:03} Quantity: {:03}", order->getId(), order->getQuantity()); }
 //   }
 
-void OrderBook::match()
+void OrderBook::match(std::map<int, double> &gainsLosses)
 {
   // Iterate through all buy orders
   for(auto it_buy = buy_orders.begin(); it_buy != buy_orders.end();)
@@ -68,6 +68,11 @@ void OrderBook::match()
                       // Update quantities
                       buyOrder->updateQuantity(-quantityTraded);
                       sellOrder->updateQuantity(-quantityTraded);
+
+                      // Calculate gain/loss for the buyer
+                      double gainLoss = (sellOrder->getPrice() - buyOrder->getPrice()) * quantityTraded;
+                      gainsLosses[buyOrder->getUserId()] += gainLoss;  // Update gain/loss for the buyer
+                      gainsLosses[sellOrder->getUserId()] -= gainLoss; // Update gain/loss for the seller
 
                       spdlog::info("[ Matched ] [ BUY {:03} ] [ SELL {:03} ] : [ {:03} ] at price [ {:.2f} ]", buyOrder->getId(), sellOrder->getId(),
                                    quantityTraded, sell_price);

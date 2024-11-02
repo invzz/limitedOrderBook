@@ -11,7 +11,7 @@ class OrderBook
 {
   public:
   void addOrder(std::unique_ptr<Order> new_order);
-  void match();
+  void match(std::map<int, double> &gainsLosses);
   int  getNextOrderId() { return next_order_id++; }
 
   // Getters

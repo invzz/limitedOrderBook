@@ -35,8 +35,8 @@ int main()
   OrderBookServer server;
 
   // Define number of bots and orders per bot
-  int numBots      = 5;
-  int ordersPerBot = 1000;
+  int numBots      = 10;
+  int ordersPerBot = 100;
 
   std::vector<std::thread> bots;
   for(int i = 0; i < numBots; ++i) { bots.emplace_back(botFunction, std::ref(server), i + 1, ordersPerBot); }
@@ -45,6 +45,9 @@ int main()
   for(auto &bot : bots) { bot.join(); }
 
   spdlog::info("All bots have finished placing orders.");
+
+  // print bot positions
+  server.printBotPositions();
 
   // server.match(); no needed, match is done real time
   return 0;

@@ -4,6 +4,8 @@
 #include "order.hh"
 #include <memory>
 #include <mutex>
+#include <spdlog/spdlog.h>
+#include <map>
 
 class OrderBookServer
 {
@@ -12,12 +14,16 @@ class OrderBookServer
 
   // Method for adding orders to the order book
   void addOrder(std::unique_ptr<Order> order);
-  void match() { orderBook.match(); }
-  
+  void match() { orderBook.match(userPositions); }
+  void printBotPositions()
+  {
+    for(auto position : userPositions) { spdlog::info("Bot ID: {:03}, Gain/Loss: {:.2f}", position.first, position.second); }
+  }
 
   private:
-  OrderBook  orderBook;
-  std::mutex mtx; // Mutex to ensure thread-safe access to the order book
+  OrderBook             orderBook;
+  std::map<int, double> userPositions; // userId -> gain/loss
+  std::mutex            mtx;           // Mutex to ensure thread-safe access to the order book
 };
 
 #endif // ORDER_BOOK_SERVER_HH
