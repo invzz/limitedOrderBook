@@ -10,6 +10,14 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
   int       id       = new_order->getId();
   int       quantity = new_order->getQuantity();
 
+  if(id == 0) { new_order->setId(next_order_id++); }
+
+  if(quantity <= 0)
+    {
+      spdlog::error("Order ID: {:03} has invalid quantity: {:03}", id, quantity);
+      return;
+    }
+
   if(type == OrderType::BUY)
     {
       // If there are no buy orders at this price, create a new PriceLevel
@@ -23,21 +31,6 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
       sell_orders[price]->addOrder(std::move(new_order)); // Move the order into the price level
     }
 }
-
-// // Print the buy and sell orders
-// spdlog::info("Buy Orders:");
-// for(auto &level : buy_orders)
-//   {
-//     spdlog::info("Price: {:.2f}", level.first);
-//     for(const auto &order : level.second->getOrders()) { spdlog::info("Order ID: {:03} Quantity: {:03}", order->getId(), order->getQuantity()); }
-//   }
-
-// spdlog::info("Sell Orders:");
-// for(auto &level : sell_orders)
-//   {
-//     spdlog::info("Price: {:.2f}", level.first);
-//     for(const auto &order : level.second->getOrders()) { spdlog::info("Order ID: {:03} Quantity: {:03}", order->getId(), order->getQuantity()); }
-//   }
 
 void OrderBook::match(std::map<int, double> &gainsLosses)
 {
@@ -70,7 +63,7 @@ void OrderBook::match(std::map<int, double> &gainsLosses)
                       sellOrder->updateQuantity(-quantityTraded);
 
                       // Calculate gain/loss for the buyer
-                      double gainLoss = (sellOrder->getPrice() - buyOrder->getPrice()) * quantityTraded;
+                      double gainLoss = (-buyOrder->getPrice()) * quantityTraded;
                       gainsLosses[buyOrder->getUserId()] += gainLoss;  // Update gain/loss for the buyer
                       gainsLosses[sellOrder->getUserId()] -= gainLoss; // Update gain/loss for the seller
 

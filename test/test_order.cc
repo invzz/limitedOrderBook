@@ -3,16 +3,16 @@
 
 TEST(OrderTest, OrderCreation)
 {
-  Order order(1, OrderType::BUY, 100, 10);
-  EXPECT_EQ(order.getId(), 1);
+  Order order(OrderType::BUY, 100, 10, 42);
   EXPECT_EQ(order.getType(), OrderType::BUY);
   EXPECT_EQ(order.getPrice(), 100);
   EXPECT_EQ(order.getQuantity(), 10);
+  EXPECT_EQ(order.getUserId(), 42);
 }
 
 TEST(OrderTest, UpdateQuantity)
 {
-  Order order(1, OrderType::SELL, 150, 20);
+  Order order(OrderType::SELL, 150, 20, 0);
   order.updateQuantity(-5);
   EXPECT_EQ(order.getQuantity(), 15);
   order.updateQuantity(-20);

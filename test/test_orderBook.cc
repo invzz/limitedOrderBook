@@ -3,118 +3,108 @@
 #include <algorithm>
 #include <spdlog/spdlog.h>
 
+// Create a simple Order for testing
+std::unique_ptr<Order> createOrder(OrderType type, double price, int quantity, int userId) { return std::make_unique<Order>(type, price, quantity, userId); }
+
 TEST(OrderBookTest, AddMultipleOrders)
 {
   OrderBook orderBook;
 
-  // Create multiple buy and sell orders
-  Order buyOrder1(1, OrderType::BUY, 100, 10);  // Higher-priced order
-  Order buyOrder2(2, OrderType::BUY, 95, 5);    // Exact price match
-  Order sellOrder1(3, OrderType::SELL, 95, 10); // Partial match with buyOrder2
-  Order sellOrder2(4, OrderType::SELL, 105, 5); // Won't be matched
+  // Add BUY orders
+  orderBook.addOrder(createOrder(OrderType::BUY, 100.0, 10, 1));
+  orderBook.addOrder(createOrder(OrderType::BUY, 101.0, 5, 2));
 
-  // Add orders to the order book
-  orderBook.addOrder(&buyOrder1);
-  orderBook.addOrder(&buyOrder2);
-  orderBook.addOrder(&sellOrder1);
-  orderBook.addOrder(&sellOrder2);
+  // Add SELL orders
+  orderBook.addOrder(createOrder(OrderType::SELL, 102.0, 7, 3));
+  orderBook.addOrder(createOrder(OrderType::SELL, 103.0, 10, 4));
 
-  // Call match after adding orders
-  orderBook.match();
-
-  // Verify quantities directly on the Order instances
-  EXPECT_EQ(buyOrder1.getQuantity(), 5);  // buyOrder1 partially filled
-  EXPECT_EQ(buyOrder2.getQuantity(), 0);  // buyOrder2 fully filled
-  EXPECT_EQ(sellOrder1.getQuantity(), 0); // sellOrder1 fully filled
-  EXPECT_EQ(sellOrder2.getQuantity(), 5); // sellOrder2 remains untouched
+  // Check the number of buy and sell orders
+  ASSERT_EQ(orderBook.getBuyOrders().size(), 2);
+  ASSERT_EQ(orderBook.getSellOrders().size(), 2);
 }
 
 TEST(OrderBookTest, PartialMatchOrders)
 {
   OrderBook orderBook;
-  Order     buyOrder(1, OrderType::BUY, 100, 10);
-  Order     sellOrder(2, OrderType::SELL, 100, 5);
 
-  orderBook.addOrder(&buyOrder);
-  orderBook.addOrder(&sellOrder);
+  // Add orders
+  orderBook.addOrder(createOrder(OrderType::BUY, 100.0, 10, 1)); // User 1 wants to buy 10 at 100
+  orderBook.addOrder(createOrder(OrderType::SELL, 100.0, 5, 2)); // User 2 sells 5 at 100
 
-  orderBook.match(); // This should only partially match
+  // Execute matching
+  std::map<int, double> gainsLosses; // Used to track gains/losses
+  orderBook.match(gainsLosses);
 
-  EXPECT_EQ(orderBook.getBuyOrders().size(), 1);  // Buy order should remain
-  EXPECT_EQ(orderBook.getSellOrders().size(), 0); // Sell order should be filled
-  EXPECT_EQ(buyOrder.getQuantity(), 5); // Buy order should have 5 remaining
+  // Verify the quantities after matching
+  ASSERT_EQ(orderBook.getBuyOrders()[100]->getOrders().front()->getQuantity(), 5); // User 1 should have 5 remaining
+  ASSERT_TRUE(orderBook.getSellOrders().empty());                                  // User 2 should be filled
 }
 
 TEST(OrderBookTest, NoMatch)
 {
   OrderBook orderBook;
-  Order     buyOrder(1, OrderType::BUY, 100, 10);
-  Order     sellOrder(2, OrderType::SELL, 110, 5);
 
-  orderBook.addOrder(&buyOrder);
-  orderBook.addOrder(&sellOrder);
+  // Add BUY and SELL orders that cannot match
+  orderBook.addOrder(createOrder(OrderType::BUY, 100.0, 10, 1));  // User 1 wants to buy 10 at 100
+  orderBook.addOrder(createOrder(OrderType::SELL, 101.0, 10, 2)); // User 2 sells 10 at 101
 
-  EXPECT_EQ(orderBook.getBuyOrders().size(), 1);  // Buy order should remain
-  EXPECT_EQ(orderBook.getSellOrders().size(), 1); // Sell order should remain
+  std::map<int, double> gainsLosses;
+  orderBook.match(gainsLosses); // No matching should occur
+
+  // Check the orders still exist
+  ASSERT_EQ(orderBook.getBuyOrders().size(), 1);
+  ASSERT_EQ(orderBook.getSellOrders().size(), 1);
 }
 
 TEST(OrderBookTest, MatchMultipleOrders)
 {
   OrderBook orderBook;
 
-  Order buyOrder1(1, OrderType::BUY, 95, 10);   // Price = 95, Quantity = 10
-  Order sellOrder1(2, OrderType::SELL, 100, 5); // Price = 100, Quantity = 5
-  Order sellOrder2(3, OrderType::SELL, 95, 5);  // Price = 95, Quantity = 5
+  // Add orders
+  orderBook.addOrder(createOrder(OrderType::BUY, 100.0, 10, 1));  // User 1
+  orderBook.addOrder(createOrder(OrderType::BUY, 100.0, 5, 2));   // User 2
+  orderBook.addOrder(createOrder(OrderType::SELL, 100.0, 10, 3)); // User 3
 
-  orderBook.addOrder(&buyOrder1);
-  orderBook.addOrder(&sellOrder1);
-  orderBook.addOrder(&sellOrder2);
+  // Execute matching
+  std::map<int, double>  gainsLosses;
+  orderBook.match(gainsLosses);
 
-  EXPECT_EQ(orderBook.getBuyOrders().size(),
-            1); // buyOrder1 should remain (5 units left)
-  EXPECT_EQ(orderBook.getBuyOrders().begin()->second->getOrders().size(),
-            1); // buyOrder1 should still exist
-  EXPECT_EQ(orderBook.getBuyOrders()
-              .begin()
-              ->second->getOrders()
-              .front()
-              ->getQuantity(),
-            5); // remaining quantity should be 5
-  EXPECT_EQ(orderBook.getSellOrders().size(), 1); // sellOrder1 should remain
-  EXPECT_EQ(orderBook.getSellOrders().begin()->second->getOrders().size(),
-            1); // sellOrder1 should still exist
-  EXPECT_EQ(orderBook.getSellOrders()
-              .begin()
-              ->second->getOrders()
-              .front()
-              ->getQuantity(),
-            5); // remaining quantity should be 5
+  // Verify the quantities after matching
+  ASSERT_EQ(orderBook.getBuyOrders().size(), 1); // Only User 2 should have remaining orders
+  ASSERT_EQ(orderBook.getBuyOrders()[100]->getOrders().front()->getQuantity(), 5);
+  ASSERT_TRUE(orderBook.getSellOrders().empty()); // User 3 should be filled
+
+  ASSERT_EQ(gainsLosses[1], -1000); // User 1 should have lost 50
+  ASSERT_EQ(gainsLosses[2], 0);   // User 2 should have no gain/loss
+  ASSERT_EQ(gainsLosses[3], 1000);  // User 3 should have gained 50
 }
 
 TEST(OrderBookTest, HandleNegativeQuantity)
 {
   OrderBook orderBook;
-  Order     buyOrder(1, OrderType::BUY, 100, 10);
-  Order     sellOrder(2, OrderType::SELL, 100, 10);
 
-  orderBook.addOrder(&buyOrder);
-  orderBook.addOrder(&sellOrder);
+  // Add a buy order with a negative quantity
+  orderBook.addOrder(createOrder(OrderType::BUY, 100.0, -5, 1)); // Invalid order
 
-  EXPECT_EQ(buyOrder.getQuantity(), 0);  // Buy order should be filled
-  EXPECT_EQ(sellOrder.getQuantity(), 0); // Sell order should be filled
+  // Check the orders still exist (should not have added)
+  ASSERT_EQ(orderBook.getBuyOrders().size(), 0);
 }
 
 TEST(OrderBookTest, RemoveFilledOrders)
 {
   OrderBook orderBook;
-  Order     buyOrder(1, OrderType::BUY, 100, 10);
-  Order     sellOrder(2, OrderType::SELL, 100, 10);
 
-  orderBook.addOrder(&buyOrder);
-  orderBook.addOrder(&sellOrder);
+  // Add orders
+  orderBook.addOrder(createOrder(OrderType::BUY, 100.0, 10, 1));
+  orderBook.addOrder(createOrder(OrderType::SELL, 100.0, 10, 2));
 
-  EXPECT_EQ(orderBook.getBuyOrders().size(), 0);  // No buy orders left
-  EXPECT_EQ(orderBook.getSellOrders().size(), 0); // No sell orders left
+  // Execute matching
+  std::map<int, double> gainsLosses;
+  orderBook.match(gainsLosses);
+
+  // Verify that the orders are removed
+  ASSERT_EQ(orderBook.getBuyOrders().size(), 0);  // Should be empty
+  ASSERT_EQ(orderBook.getSellOrders().size(), 0); // Should be empty
 }
 
 int main(int argc, char **argv)
