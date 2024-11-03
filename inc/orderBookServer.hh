@@ -1,39 +1,24 @@
+// orderBookServer.hh
 #ifndef ORDER_BOOK_SERVER_HH
 #define ORDER_BOOK_SERVER_HH
-#include "orderBook.hh"
-#include "order.hh"
+#include <vector>
 #include <memory>
-#include <mutex>
-#include <spdlog/spdlog.h>
-#include <map>
+#include "bot.hh"
+#include "orderBook.hh"
 
 class OrderBookServer
 {
   public:
-  explicit OrderBookServer();
-
-  // Method for adding orders to the order book
-  void addOrder(std::unique_ptr<Order> order);
-  void match() { orderBook.match(userPositions); }
-
-  void printPositions()
-  {
-    for(auto position : userPositions) { spdlog::info(LOG_INFO_FMT + LOG_POSITION, position.first, position.second); }
-  }
-
-  void printPosition(int userId) { spdlog::info(LOG_INFO_FMT + LOG_POSITION, userId, userPositions[userId]); }
-
-  std::map<int, double> getUserPositions() { return userPositions; }
-  double                getUserPosition(int userId) { return userPositions[userId]; }
-  OrderBook            &getOrderBook() { return orderBook; }
+  void       addOrder(std::unique_ptr<Order> order);
+  void       addBot(std::unique_ptr<Bot> bot);
+  void       tick(int numTicks = 1, int tickDurationMs = 100);
+  void       logMetrics();
+  OrderBook &getOrderBook() { return orderBook; }
 
   private:
-  const std::string     LOG_INFO_FMT = "[ OrderBookServer ] :: ";
-  const std::string     LOG_POSITION = "[ Position ] >> [ USER {:03} ] >> [ profit / loss ] :: $ {:.2f}";
-
-  OrderBook             orderBook;
-  std::map<int, double> userPositions; // userId -> gain/loss
-  std::mutex            mtx;           // Mutex to ensure thread-safe access to the order book
+  std::unordered_map<int, std::unique_ptr<Bot>> bots;
+  std::unordered_map<int, Metrics *>            metricsMap; // Map userId to Metrics
+  OrderBook                                     orderBook;
+  std::mutex                                    mtx;
 };
-
 #endif // ORDER_BOOK_SERVER_HH

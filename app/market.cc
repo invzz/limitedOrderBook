@@ -1,56 +1,26 @@
 #include "orderBookServer.hh"
-#include "order.hh"
+#include "sellerBot.hh"
+#include "buyerBot.hh"
+#include "marketMakerBot.hh"
 #include <spdlog/spdlog.h>
 #include <thread>
 #include <vector>
 #include <random>
 
-void simulateOrderPlacement(OrderBookServer &server, int userId, int numOrders)
-{
-  for(int i = 0; i < numOrders; ++i)
-    {
-      // create a random order
-      std::mt19937                           rng(std::random_device{}());
-      std::uniform_int_distribution<int>     quantity_dist(1, 100);
-      std::uniform_real_distribution<double> price_dist(80.0, 110.0);
-      std::uniform_int_distribution<int>     type_dist(0, 1); // 0 for BUY, 1 for SELL
 
-      OrderType type     = (type_dist(rng) == 0) ? OrderType::BUY : OrderType::SELL;
-      double    price    = price_dist(rng);
-      int       quantity = quantity_dist(rng);
-
-      // Create an order
-      auto order = std::make_unique<Order>(type, price, quantity, userId);
-      // Add order to the server
-      server.addOrder(std::move(order));
-      // Simulate delay between orders
-      // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-}
 
 int main()
 {
-  spdlog::set_level(spdlog::level::info);
-
+  spdlog::set_level(spdlog::level::debug); // Set the log level to debug
   OrderBookServer server;
 
-  // Define number of bots and orders per bot
-  int numBots      = 10;
-  int ordersPerBot = 1000;
+  // Create bots with different strategies
+  server.addBot(std::make_unique<SellerBot>(1, "Seller_1", &server, 80.0, 110.0));
+  server.addBot(std::make_unique<SellerBot>(2, "Seller_2", &server, 75.0, 130.0));
+  server.addBot(std::make_unique<BuyerBot>(3, "Buyer_1", &server));
+  // server.addBot(std::make_unique<BuyerBot>(4, "Buyer_2", &server));
 
-  std::vector<std::thread> bots;
-  for(int i = 0; i < numBots; ++i) { bots.emplace_back(simulateOrderPlacement, std::ref(server), i + 1, ordersPerBot); }
-
-  spdlog::info("bots are starting to place orders...");
-
-  // Wait for all bots to finish
-  for(auto &bot : bots) { bot.join(); }
-
-  spdlog::info("All bots have finished placing orders.");
-
-  // print bot positions
-  server.printPositions();
-
-  // server.match(); no needed, match is done real time
+  server.tick(NUM_TICKS, TICK_DURATION_MS); // Start the market simulation
+  server.logMetrics();
   return 0;
 }

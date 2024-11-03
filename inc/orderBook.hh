@@ -6,13 +6,23 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include "metrics.hh"
 
 class OrderBook
 {
   public:
   void addOrder(std::unique_ptr<Order> new_order);
-  void match(std::map<int, double> &gainsLosses);
+  void match(std::unordered_map<int, Metrics *> metricsMap);
   int  getNextOrderId() { return next_order_id++; }
+
+  bool isEmpty() { return buy_orders.empty() && sell_orders.empty(); }
+
+  double getBestBid()
+  {
+    if(buy_orders.empty()) return 0.0;
+    // return the highest buy price
+    return buy_orders.rbegin()->first;
+  }
 
   // Getters
   std::map<double, std::unique_ptr<PriceLevel>> &getBuyOrders() { return buy_orders; }

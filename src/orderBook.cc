@@ -3,8 +3,6 @@
 
 void OrderBook::addOrder(std::unique_ptr<Order> new_order)
 {
-  std::lock_guard<std::mutex> lock(mtx);
-
   double    price    = new_order->getPrice();
   OrderType type     = new_order->getType();
   int       id       = new_order->getId();
@@ -21,18 +19,24 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
   if(type == OrderType::BUY)
     {
       // If there are no buy orders at this price, create a new PriceLevel
-      if(buy_orders.find(price) == buy_orders.end()) { buy_orders[price] = std::make_unique<PriceLevel>(price); }
+      if(buy_orders.find(price) == buy_orders.end())
+        {
+          buy_orders[price] = std::make_unique<PriceLevel>(price);
+        }
       buy_orders[price]->addOrder(std::move(new_order));
     }
   else if(type == OrderType::SELL)
     {
       // If there are no sell orders at this price, create a new PriceLevel
-      if(sell_orders.find(price) == sell_orders.end()) { sell_orders[price] = std::make_unique<PriceLevel>(price); }
+      if(sell_orders.find(price) == sell_orders.end())
+        {
+          sell_orders[price] = std::make_unique<PriceLevel>(price);
+        }
       sell_orders[price]->addOrder(std::move(new_order)); // Move the order into the price level
     }
 }
 
-void OrderBook::match(std::map<int, double> &gainsLosses)
+void OrderBook::match(std::unordered_map<int, Metrics *> metricsMap)
 {
   // Iterate through all buy orders
   for(auto it_buy = buy_orders.begin(); it_buy != buy_orders.end();)
@@ -52,26 +56,40 @@ void OrderBook::match(std::map<int, double> &gainsLosses)
                 {
                   for(auto &sellOrder : it_sell->second->getOrders())
                     {
+                      if(sellOrder == nullptr || buyOrder == nullptr) continue;
                       // Prevent self-trading
                       if(buyOrder->getUserId() == sellOrder->getUserId()) continue;
 
                       // Calculate the quantity to trade
-                      int quantityTraded = std::min(buyOrder->getQuantity(), sellOrder->getQuantity());
+                      int quantityTraded =
+                        std::min(buyOrder->getQuantity(), sellOrder->getQuantity());
 
                       // Update quantities
                       buyOrder->updateQuantity(-quantityTraded);
                       sellOrder->updateQuantity(-quantityTraded);
 
-                      // Calculate gain/loss for the buyer
-                      double gainLoss = (-buyOrder->getPrice()) * quantityTraded;
-                      gainsLosses[buyOrder->getUserId()] += gainLoss;  // Update gain/loss for the buyer
-                      gainsLosses[sellOrder->getUserId()] -= gainLoss; // Update gain/loss for the seller
+                      int buyerId  = buyOrder->getId();
+                      int sellerId = sellOrder->getId();
 
-                      spdlog::debug("[ OrderBook ]::[MATCH!] :: [ BUY {:03} ] [ SELL {:03} ] : [ {:03} ] at price [ {:.2f} ]", buyOrder->getId(), sellOrder->getId(),
-                                   quantityTraded, sell_price);
+                             
 
+                      spdlog::debug("[ OrderBook ] :: [MATCH!] :: [ BUY {:03} ] [ SELL {:03} ] : [ "
+                                    "{:03} ] at price [ {:.2f} ]",
+                                    buyOrder->getId(), sellOrder->getId(), quantityTraded,
+                                    sell_price);
+
+                      Trade trade(buyOrder->getUserId(), sellOrder->getUserId(), sell_price,
+                                  quantityTraded);
+                      
+                      metricsMap[buyOrder->getUserId()]->addBuyTrade(trade);
+                      metricsMap[sellOrder->getUserId()]->addSellTrade(trade);
+
+                     
                       // Remove filled orders
-                      if(sellOrder->getQuantity() == 0) { it_sell->second->removeOrder(sellOrder.get()); }
+                      if(sellOrder->getQuantity() == 0)
+                        {
+                          it_sell->second->removeOrder(sellOrder.get());
+                        }
 
                       if(buyOrder->getQuantity() == 0)
                         {
@@ -95,7 +113,7 @@ void OrderBook::match(std::map<int, double> &gainsLosses)
               if(it_buy->second->getOrders().empty())
                 {
                   it_buy = buy_orders.erase(it_buy); // Erase and get the next iterator
-                  break;                             // Break out of the sell order loop since all buy orders are matched
+                  break; // Break out of the sell order loop since all buy orders are matched
                 }
             }
           else

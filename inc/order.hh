@@ -9,9 +9,9 @@ class Order
   private:
   int       id;
   int       userId;
-  OrderType type;
-  double    price;
   int       quantity;
+  double    price;
+  OrderType type;
 
   public:
   // Constructor

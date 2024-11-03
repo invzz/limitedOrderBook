@@ -1,30 +1,35 @@
 cmake_minimum_required(VERSION 3.10)
 project(OrderBook)
 
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
 
 # Include directories
 include_directories(inc)
 
+# Include directories
+include_directories(inc/bot)
 
-# Add source files for the OrderBook library
-set(ORDER_BOOK_SOURCES
-    src/orderBook.cc
-    src/order.cc
-    src/orderBookServer.cc
-)
+# 
+file(GLOB ORDER_BOOK_SRC "src/*.cc")
+
+file(GLOB BOTS_SRC "src/bot/*.cc")
 
 # Create the OrderBook library
-add_library(OrderBookLib ${ORDER_BOOK_SOURCES})
+add_library(OrderBookLib ${ORDER_BOOK_SRC} )
+add_library(BotsLib ${BOTS_SRC} )
 
 # Find and link spdlog
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(OrderBookLib PRIVATE spdlog::spdlog)
+target_link_libraries(BotsLib PRIVATE spdlog::spdlog)
 
 # Create the main application
 add_executable(OrderBookApp app/market.cc)
+add_compile_definitions(-DOUTPUT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/output/" -DNUM_TICKS=1000 -DTICK_DURATION_MS=0)
 
 # Link the OrderBook library to the application
-target_link_libraries(OrderBookApp PRIVATE OrderBookLib spdlog::spdlog)
+target_link_libraries(OrderBookApp PRIVATE BotsLib OrderBookLib spdlog::spdlog)
 
 find_package(GTest CONFIG REQUIRED)
 
@@ -41,7 +46,7 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
     add_executable(${TEST_NAME} ${TEST_SOURCE})
 
     # Link each test executable to the OrderBook library and GTest
-    target_link_libraries(${TEST_NAME} PRIVATE OrderBookLib GTest::gtest)
+    target_link_libraries(${TEST_NAME} PRIVATE BotsLib OrderBookLib GTest::gtest)
 
     # Link spdlog to each test executable if needed
     target_link_libraries(${TEST_NAME} PRIVATE spdlog::spdlog)
