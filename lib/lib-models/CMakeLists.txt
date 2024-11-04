@@ -26,7 +26,7 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
     add_executable(${TEST_NAME} ${TEST_SOURCE})
 
     # Link each test executable to the OrderBook library and GTest
-    target_link_libraries(${TEST_NAME} PRIVATE OrderBookLib GTest::gtest)
+    target_link_libraries(${TEST_NAME} PRIVATE lib-models GTest::gtest)
 
     # Link spdlog to each test executable if needed
     target_link_libraries(${TEST_NAME} PRIVATE spdlog::spdlog)

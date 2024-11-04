@@ -7,8 +7,8 @@
 class Trade
 {
   public:
-  Trade(int buyerId, int sellerId, double price, int quantity)
-      : buyerId(buyerId), sellerId(sellerId), price(price), quantity(quantity)
+  Trade(int tick, int buyerId, int sellerId, double price, int quantity)
+      : tick(tick), buyerId(buyerId), sellerId(sellerId), price(price), quantity(quantity)
   {}
   int    getTick() const { return tick; }
   int    getBuyerId() const { return buyerId; }

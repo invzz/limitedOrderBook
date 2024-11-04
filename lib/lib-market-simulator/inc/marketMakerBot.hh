@@ -7,7 +7,7 @@
 class MarketMakerBot : public Bot
 {
   public:
-  MarketMakerBot(int userId, const std::string &name, OrderBookService *server)
+  MarketMakerBot(int userId, const std::string &name, MarketSimulator *server)
       : Bot(userId, name, server)
   {}
 

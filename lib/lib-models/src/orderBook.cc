@@ -36,7 +36,7 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
     }
 }
 
-void OrderBook::match(std::unordered_map<int, Metrics *> metricsMap)
+void OrderBook::match(int tick, std::unordered_map<int, Metrics *> metricsMap)
 {
   // Iterate through all buy orders
   for(auto it_buy = buy_orders.begin(); it_buy != buy_orders.end();)
@@ -56,9 +56,18 @@ void OrderBook::match(std::unordered_map<int, Metrics *> metricsMap)
                 {
                   for(auto &sellOrder : it_sell->second->getOrders())
                     {
+
+                      // pointer not ready
                       if(sellOrder == nullptr || buyOrder == nullptr) continue;
+                      
                       // Prevent self-trading
                       if(buyOrder->getUserId() == sellOrder->getUserId()) continue;
+
+                      auto buyer  = buyOrder->getUserId();
+                      auto seller = sellOrder->getUserId();
+
+                      int bid_id  = buyOrder->getId();
+                      int sell_id = sellOrder->getId();
 
                       // Calculate the quantity to trade
                       int quantityTraded =
@@ -68,17 +77,15 @@ void OrderBook::match(std::unordered_map<int, Metrics *> metricsMap)
                       buyOrder->updateQuantity(-quantityTraded);
                       sellOrder->updateQuantity(-quantityTraded);
 
-                      int buyerId  = buyOrder->getId();
-                      int sellerId = sellOrder->getId();
-
                       spdlog::debug("[ OrderBook ] :: [MATCH!] :: [ BUY {:03} ] [ SELL {:03} ] : [ "
                                     "{:03} ] at price [ {:.2f} ]",
-                                    buyerId, sellerId, quantityTraded, sell_price);
+                                    bid_id, sell_id, quantityTraded, sell_price);
 
-                      Trade trade(buyerId, sellerId, sell_price, quantityTraded);
+                      std::shared_ptr trade =
+                        std::make_shared<Trade>(tick, buyer, seller, sell_price, quantityTraded);
 
-                      metricsMap[buyerId]->addBuyTrade(trade);
-                      metricsMap[sellerId]->addSellTrade(trade);
+                      metricsMap[buyer]->addBuyTrade(trade);
+                      metricsMap[seller]->addSellTrade(trade);
 
                       // Remove filled orders
                       if(sellOrder->getQuantity() == 0)

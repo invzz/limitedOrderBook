@@ -237,7 +237,8 @@
             "deque": "cpp",
             "queue": "cpp",
             "ranges": "cpp",
-            "random": "cpp"
+            "random": "cpp",
+            "numeric": "cpp"
         },
         "cmake.debugConfig": {
             "args": [],

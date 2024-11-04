@@ -8,7 +8,7 @@
 class SellerBot : public Bot
 {
   public:
-  SellerBot(int userId, const std::string &name, OrderBookService *server, double min, double max)
+  SellerBot(int userId, const std::string &name, MarketSimulator *server, double min, double max)
       : Bot(userId, name, server), min_price(min), max_price(max)
   {}
 

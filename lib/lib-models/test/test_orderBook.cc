@@ -45,7 +45,7 @@ TEST(OrderBookTest, PartialMatchOrders)
   orderBook.addOrder(std::move(order2));
 
   // Execute matching
-  orderBook.match(metricsMap);
+  orderBook.match(0, metricsMap);
 
   // // Verify the quantities after matching
   ASSERT_EQ(orderBook.getBuyOrders()[100]->getOrders().front()->getQuantity(),
@@ -55,10 +55,10 @@ TEST(OrderBookTest, PartialMatchOrders)
 
 TEST(OrderBookTest, NoMatch)
 {
-  OrderBook                          orderBook;
-  std::unordered_map<int, Metrics *> metricsMap;
+  OrderBook                           orderBook;
+  std::unordered_map<int, Metrics *>  metricsMap;
   std::vector<std::unique_ptr<Order>> orders;
-  
+
   orders.emplace_back(createOrder(OrderType::BUY, 100.0, 10, 1));
   orders.emplace_back(createOrder(OrderType::SELL, 101.0, 10, 2));
 
@@ -69,9 +69,8 @@ TEST(OrderBookTest, NoMatch)
       orderBook.addOrder(std::move(orders[i - 1]));
     }
 
-  
   // Execute matching
-  orderBook.match(metricsMap);
+  orderBook.match(0, metricsMap);
 
   // Check the orders still exist
   ASSERT_EQ(orderBook.getBuyOrders().size(), 1);
@@ -89,15 +88,15 @@ TEST(OrderBookTest, MatchMultipleOrders)
   orders.emplace_back(createOrder(OrderType::BUY, 100.0, 5, 2));
   orders.emplace_back(createOrder(OrderType::SELL, 100.0, 10, 3));
 
-  for (auto i = 1; i <= orders.size(); i++)
-  {
-    metricsMap[i] = new Metrics();
-    orders[i - 1]->setId(i);
-    orderBook.addOrder(std::move(orders[i - 1]));
-  }
+  for(auto i = 1; i <= orders.size(); i++)
+    {
+      metricsMap[i] = new Metrics();
+      orders[i - 1]->setId(i);
+      orderBook.addOrder(std::move(orders[i - 1]));
+    }
 
   // Execute matching
-  orderBook.match(metricsMap);
+  orderBook.match(0, metricsMap);
 
   // Verify the quantities after matching
   ASSERT_EQ(orderBook.getBuyOrders().size(), 1); // Only User 2 should have remaining orders
@@ -138,7 +137,7 @@ TEST(OrderBookTest, RemoveFilledOrders)
       orderBook.addOrder(std::move(orders[i - 1]));
     }
 
-  orderBook.match(metricsMap);
+  orderBook.match(0, metricsMap);
 
   // Verify that the orders are removed
   ASSERT_EQ(orderBook.getBuyOrders().size(), 0);  // Should be empty

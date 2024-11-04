@@ -9,7 +9,7 @@
 #include "metrics.hh"
 
 // Forward declaration to avoid circular dependency
-class OrderBookService;
+class MarketSimulator;
 
 class Bot
 {
@@ -17,7 +17,7 @@ class Bot
   virtual ~Bot()     = default;
   virtual void run() = 0; // Pure virtual to enforce implementation in derived classes
 
-  Bot(int userId, const std::string name, OrderBookService *server)
+  Bot(int userId, const std::string name, MarketSimulator *server)
       : userId(userId), name(name), server(server)
   {
     this->rng.seed(std::random_device()());
@@ -28,11 +28,11 @@ class Bot
   Metrics    &getMetrics() { return metrics; }
 
   protected:
-  std::mt19937      rng;
-  int               userId;
-  std::string       name;
-  OrderBookService *server;
-  Metrics           metrics;
+  std::mt19937     rng;
+  int              userId;
+  std::string      name;
+  MarketSimulator *server;
+  Metrics          metrics;
 };
 
 #endif // BOT_HH

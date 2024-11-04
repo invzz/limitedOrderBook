@@ -11,7 +11,7 @@
 int main()
 {
   spdlog::set_level(spdlog::level::debug); // Set the log level to debug
-  OrderBookService server;
+  MarketSimulator server;
 
   // Create bots with different strategies
   server.addBot(std::make_unique<SellerBot>(1, "Seller_1", &server, 80.0, 110.0));

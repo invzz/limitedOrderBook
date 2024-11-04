@@ -10,8 +10,7 @@
 class BuyerBot : public Bot
 {
   public:
-  BuyerBot(int userId, const std::string &name, OrderBookService *server)
-      : Bot(userId, name, server)
+  BuyerBot(int userId, const std::string &name, MarketSimulator *server) : Bot(userId, name, server)
   {}
 
   void run() override;

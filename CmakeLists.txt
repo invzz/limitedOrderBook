@@ -9,8 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # I usually use vcpkg to install spdlog
 find_package(spdlog REQUIRED)
 find_package(GTest CONFIG REQUIRED)
-
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/dist/${CMAKE_BUILD_TYPE})
 add_subdirectory(lib)
 add_subdirectory(app)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/dist/${CMAKE_BUILD_TYPE})

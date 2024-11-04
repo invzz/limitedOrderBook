@@ -4,7 +4,7 @@
 
 #define OUTPUT_DIR ""
 
-void OrderBookService::addOrder(std::unique_ptr<Order> order)
+void MarketSimulator::addOrder(std::unique_ptr<Order> order)
 {
   order->setId(orderBook.getNextOrderId());
 
@@ -28,18 +28,19 @@ void OrderBookService::addOrder(std::unique_ptr<Order> order)
   spdlog::debug("[ OrderBook ] :: User {} >> [ {} Order ] < {:^5} > {:^.2f} x {:^4} Added .",
                 userId, stringType, id, price, quantity);
 
-  orderBook.match(metricsMap); // Match the orders in the order book
+  orderBook.match(current_tick, metricsMap); // Match the orders in the order book
 }
 
-void OrderBookService::addBot(std::unique_ptr<Bot> bot)
+void MarketSimulator::addBot(std::unique_ptr<Bot> bot)
 {
   int userId         = bot->getUserId();
   metricsMap[userId] = &bot->getMetrics(); // Store pointer to bot's metrics
   bots[userId]       = std::move(bot);     // Move bot into the map with userId as the key
 }
 
-void OrderBookService::tick(int numTicks, int tickDurationMs)
+void MarketSimulator::tick(int numTicks, int tickDurationMs)
 {
+  resetCurrentTick(); // Reset the current tick to 0
   for(int i = 0; i < numTicks; i++)
     {
       for(auto &botPair : bots)
@@ -48,11 +49,12 @@ void OrderBookService::tick(int numTicks, int tickDurationMs)
           Bot *bot = botPair.second.get(); // Get raw pointer to Bot
           bot->run(); // Each bot can access the order book through getOrderBook()
         }
+      incrementCurrentTick(); // Increment the current tick
     }
   std::this_thread::sleep_for(std::chrono::milliseconds(tickDurationMs));
 }
 
-void OrderBookService::logMetrics()
+void MarketSimulator::logMetrics()
 {
   for(auto &pair : metricsMap)
     {
