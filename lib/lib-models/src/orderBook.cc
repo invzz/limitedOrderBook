@@ -71,20 +71,15 @@ void OrderBook::match(std::unordered_map<int, Metrics *> metricsMap)
                       int buyerId  = buyOrder->getId();
                       int sellerId = sellOrder->getId();
 
-                             
-
                       spdlog::debug("[ OrderBook ] :: [MATCH!] :: [ BUY {:03} ] [ SELL {:03} ] : [ "
                                     "{:03} ] at price [ {:.2f} ]",
-                                    buyOrder->getId(), sellOrder->getId(), quantityTraded,
-                                    sell_price);
+                                    buyerId, sellerId, quantityTraded, sell_price);
 
-                      Trade trade(buyOrder->getUserId(), sellOrder->getUserId(), sell_price,
-                                  quantityTraded);
-                      
-                      metricsMap[buyOrder->getUserId()]->addBuyTrade(trade);
-                      metricsMap[sellOrder->getUserId()]->addSellTrade(trade);
+                      Trade trade(buyerId, sellerId, sell_price, quantityTraded);
 
-                     
+                      metricsMap[buyerId]->addBuyTrade(trade);
+                      metricsMap[sellerId]->addSellTrade(trade);
+
                       // Remove filled orders
                       if(sellOrder->getQuantity() == 0)
                         {

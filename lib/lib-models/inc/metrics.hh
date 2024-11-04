@@ -5,6 +5,8 @@
 #include <vector>
 #include "trade.hh"
 
+#define CSV_SEPARATOR ", "
+
 class Metrics
 {
   public:
@@ -32,12 +34,25 @@ class Metrics
 
   std::string getBuyTradesCsv()
   {
-    std::string csv = "BuyerID, SellerID, Price, Quantity\n";
+    std::string csv = "time, BuyerID, SellerID, Price, Quantity\n";
     for(const auto &trade : buyTrades)
       {
-        csv += std::to_string(trade.getBuyerId()) + ", " + std::to_string(trade.getSellerId()) +
-               ", " + std::to_string(trade.getPrice()) + ", " +
-               std::to_string(trade.getQuantity()) + "\n";
+        auto tick      = std::to_string(trade.getTick());
+        auto seller_id = std::to_string(trade.getSellerId());
+        auto buyer_id  = std::to_string(trade.getBuyerId());
+        auto quantity  = std::to_string(trade.getQuantity());
+        auto price     = std::to_string(trade.getPrice());
+
+        csv += tick;
+        csv += CSV_SEPARATOR;
+        csv += buyer_id;
+        csv += CSV_SEPARATOR;
+        csv += seller_id;
+        csv += CSV_SEPARATOR;
+        csv += price;
+        csv += CSV_SEPARATOR;
+        csv += quantity;
+        csv += "\n";
       }
 
     return csv;
@@ -45,12 +60,26 @@ class Metrics
 
   std::string getSellTradesCsv()
   {
-    std::string csv = "BuyerID, SellerID, Price, Quantity\n";
+    std::string csv = "time, BuyerID, SellerID, Price, Quantity\n";
+
     for(const auto &trade : sellTrades)
       {
-        csv += std::to_string(trade.getBuyerId()) + ", " + std::to_string(trade.getSellerId()) +
-               ", " + std::to_string(trade.getPrice()) + ", " +
-               std::to_string(trade.getQuantity()) + "\n";
+        auto tick      = std::to_string(trade.getTick());
+        auto seller_id = std::to_string(trade.getSellerId());
+        auto buyer_id  = std::to_string(trade.getBuyerId());
+        auto quantity  = std::to_string(trade.getQuantity());
+        auto price     = std::to_string(trade.getPrice());
+
+        csv += tick;
+        csv += CSV_SEPARATOR;
+        csv += buyer_id;
+        csv += CSV_SEPARATOR;
+        csv += seller_id;
+        csv += CSV_SEPARATOR;
+        csv += price;
+        csv += CSV_SEPARATOR;
+        csv += quantity;
+        csv += "\n";
       }
 
     return csv;

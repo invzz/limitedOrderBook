@@ -12,7 +12,7 @@ class OrderBook
 {
   public:
   void addOrder(std::unique_ptr<Order> new_order);
-  void match(std::unordered_map<int, Metrics *> metricsMap);
+  void match(std::unordered_map<int, Metrics *> metricsMap = {});
   int  getNextOrderId() { return next_order_id++; }
 
   bool isEmpty() { return buy_orders.empty() && sell_orders.empty(); }

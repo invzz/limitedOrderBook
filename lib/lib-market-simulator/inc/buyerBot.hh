@@ -2,7 +2,7 @@
 #ifndef BUYER_BOT_HH
 #define BUYER_BOT_HH
 
-#include "orderBookServer.hh"
+#include "marketSimulator.hh"
 #include "order.hh"
 #include <string>
 #include <map>
@@ -10,7 +10,8 @@
 class BuyerBot : public Bot
 {
   public:
-  BuyerBot(int userId, const std::string &name, OrderBookServer *server) : Bot(userId, name, server)
+  BuyerBot(int userId, const std::string &name, OrderBookService *server)
+      : Bot(userId, name, server)
   {}
 
   void run() override;

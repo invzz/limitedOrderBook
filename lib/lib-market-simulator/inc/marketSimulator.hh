@@ -6,14 +6,14 @@
 #include "bot.hh"
 #include "orderBook.hh"
 
-class OrderBookServer
+class OrderBookService
 {
   public:
-  void       addOrder(std::unique_ptr<Order> order);
-  void       addBot(std::unique_ptr<Bot> bot);
   void       tick(int numTicks = 1, int tickDurationMs = 100);
   void       logMetrics();
+  void       addBot(std::unique_ptr<Bot> bot);
   OrderBook &getOrderBook() { return orderBook; }
+  void       addOrder(std::unique_ptr<Order> order);
 
   private:
   std::unordered_map<int, std::unique_ptr<Bot>> bots;

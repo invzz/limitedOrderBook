@@ -1,5 +1,5 @@
 #include "sellerBot.hh"
-#include "orderBookServer.hh" // Include in implementation files to avoid circular dependency
+#include "marketSimulator.hh"
 #include <spdlog/spdlog.h>
 
 void SellerBot::run()

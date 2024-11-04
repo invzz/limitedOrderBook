@@ -1,8 +1,10 @@
-#include "orderBookServer.hh"
+#include "marketSimulator.hh"
 #include <iostream>
 #include <fstream>
 
-void OrderBookServer::addOrder(std::unique_ptr<Order> order)
+#define OUTPUT_DIR ""
+
+void OrderBookService::addOrder(std::unique_ptr<Order> order)
 {
   order->setId(orderBook.getNextOrderId());
 
@@ -29,14 +31,14 @@ void OrderBookServer::addOrder(std::unique_ptr<Order> order)
   orderBook.match(metricsMap); // Match the orders in the order book
 }
 
-void OrderBookServer::addBot(std::unique_ptr<Bot> bot)
+void OrderBookService::addBot(std::unique_ptr<Bot> bot)
 {
   int userId         = bot->getUserId();
   metricsMap[userId] = &bot->getMetrics(); // Store pointer to bot's metrics
   bots[userId]       = std::move(bot);     // Move bot into the map with userId as the key
 }
 
-void OrderBookServer::tick(int numTicks, int tickDurationMs)
+void OrderBookService::tick(int numTicks, int tickDurationMs)
 {
   for(int i = 0; i < numTicks; i++)
     {
@@ -50,7 +52,7 @@ void OrderBookServer::tick(int numTicks, int tickDurationMs)
   std::this_thread::sleep_for(std::chrono::milliseconds(tickDurationMs));
 }
 
-void OrderBookServer::logMetrics()
+void OrderBookService::logMetrics()
 {
   for(auto &pair : metricsMap)
     {
