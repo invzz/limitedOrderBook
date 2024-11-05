@@ -238,7 +238,8 @@
             "queue": "cpp",
             "ranges": "cpp",
             "random": "cpp",
-            "numeric": "cpp"
+            "numeric": "cpp",
+            "valarray": "cpp"
         },
         "cmake.debugConfig": {
             "args": [],

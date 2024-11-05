@@ -11,7 +11,7 @@ add_library(${PROJECT_NAME} STATIC ${ORDERBOOKLIB_SOURCES} )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 # Link spdlog to OrderBookLib
-target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog )
+target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog nlohmann_json::nlohmann_json)
 
 # Add tests
 enable_testing()
@@ -26,7 +26,7 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
     add_executable(${TEST_NAME} ${TEST_SOURCE})
 
     # Link each test executable to the OrderBook library and GTest
-    target_link_libraries(${TEST_NAME} PRIVATE lib-models GTest::gtest)
+    target_link_libraries(${TEST_NAME} PRIVATE lib-models GTest::gtest )
 
     # Link spdlog to each test executable if needed
     target_link_libraries(${TEST_NAME} PRIVATE spdlog::spdlog)

@@ -1,10 +1,12 @@
-project(MarketApp)
+cmake_minimum_required(VERSION 3.10)
 
-# Main application source
-set(SOURCES market.cc)
+# Define the project name and C++ standard globally
+project(MarketSimulator VERSION 1.0)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Create the executable
-add_executable(MarketApp ${SOURCES})
+set(LIBS marketServer marketBot market )
 
-# Link against BotLib and OrderBookLib; include directories are automatically propagated
-target_link_libraries(MarketApp PRIVATE lib-models lib-market-simulator spdlog::spdlog)
+foreach(LIB ${LIBS})
+    add_subdirectory(${LIB})
+endforeach()

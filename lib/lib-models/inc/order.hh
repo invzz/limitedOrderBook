@@ -1,7 +1,7 @@
 #ifndef ORDER_HH
 #define ORDER_HH
-
 #include "orderType.hh"
+#include <nlohmann/json.hpp>
 #include <string>
 
 class Order
@@ -14,8 +14,20 @@ class Order
   OrderType type;
 
   public:
+  nlohmann::json toJson() const
+  {
+    return nlohmann::json{
+      {"id",       id                                       },
+      {"userId",   userId                                   },
+      {"price",    price                                    },
+      {"quantity", quantity                                 },
+      {"type",     (type == OrderType::BUY ? "BUY" : "SELL")}
+    };
+  }
   // Constructor
-  Order::Order(OrderType type, double price, int quantity, int userId) : id(0), type(type), price(price), quantity(quantity), userId(userId) {}
+  Order::Order(OrderType type, double price, int quantity, int userId)
+      : id(0), type(type), price(price), quantity(quantity), userId(userId)
+  {}
 
   // Getters
   int       getId() const { return id; };

@@ -7,6 +7,7 @@
 #include <mutex>
 #include <algorithm>
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
 
 class PriceLevel
 {
@@ -17,6 +18,22 @@ class PriceLevel
 
   public:
   PriceLevel(double price) : price(price) {}
+
+  public:
+  nlohmann::json toJson() const
+  {
+    nlohmann::json json;
+    json["price"] = price;
+
+    nlohmann::json ordersJson = nlohmann::json::array();
+    for(const auto &order : orders)
+      {
+        if(order) ordersJson.push_back(order->toJson());
+      }
+    json["orders"] = ordersJson;
+
+    return json;
+  }
 
   void addOrder(std::unique_ptr<Order> order)
   {
