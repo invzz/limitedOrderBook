@@ -41,7 +41,7 @@ class Bot
     zmq::message_t orderMessage(order.dump().size());
     memcpy(orderMessage.data(), order.dump().data(), order.dump().size());
     orderSocket.send(orderMessage, zmq::send_flags::none);
-    spdlog::info("Sent order: {}", order.dump());
+    spdlog::info("Sent order:\n{}", order.dump(4));
   }
 
   void processOrderBookUpdate(const std::string &update)
@@ -49,7 +49,15 @@ class Bot
     try
       {
         nlohmann::json orderBookUpdate = nlohmann::json::parse(update);
-        orderBook                      = OrderBook::createFromJson(orderBookUpdate);
+
+        // check if the order book is empty
+        if(orderBookUpdate.empty())
+          {
+            spdlog::warn("Received empty order book update");
+            return;
+          }
+
+        orderBook = OrderBook::createFromJson(orderBookUpdate);
 
         spdlog::debug("Received order book update: {} ", orderBook->totalOrders());
       }

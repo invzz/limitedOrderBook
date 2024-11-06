@@ -48,12 +48,13 @@ class MarketServer
     current_tick++;
     orderBook.match();
     publishOrderBook();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 
   private:
   void listenForMessages()
   {
-    spdlog::info("[Server] Starting listener thread");
+    spdlog::info("[server] Starting listener thread");
 
     while(running)
       {
@@ -61,13 +62,13 @@ class MarketServer
         if(pullSocket.recv(message, zmq::recv_flags::none))
           {
             std::string receivedMessage(static_cast<char *>(message.data()), message.size());
-            spdlog::debug("[Server] Received message: {}", receivedMessage);
+            spdlog::debug("[Server] Received message: {} ", receivedMessage);
             processMessage(receivedMessage);
           }
         else
           {
             // Sleep for a short duration to prevent busy-waiting
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
           }
       }
   }
@@ -92,7 +93,8 @@ class MarketServer
                   std::unique_lock lock(orderBook_mtx);
                   orderBook.addOrder(std::move(newOrder));
                 }
-                spdlog::info("[+] received order {}", message);
+                spdlog::info(" received order :[OrderBook size {:^5}] \n{}",
+                             orderBook.totalOrders(), parsed.dump(2));
               }
           }
         else { spdlog::warn(" {} Unknown message type: {}", current_tick.load(), message); }
@@ -115,7 +117,7 @@ class MarketServer
 
     zmq::message_t message(orderBookString.size());
     memcpy(message.data(), orderBookString.data(), orderBookString.size());
-    //spdlog::debug("[Server] Publishing order book update: {}", orderBookString);
+    // spdlog::debug("[Server] Publishing order book update: {}", orderBookString);
     pubSocket.send(message, zmq::send_flags::none);
   }
 
