@@ -1,3 +1,4 @@
+#pragma once
 #include <zmq.hpp>
 #include <thread>
 #include <iostream>
@@ -9,9 +10,9 @@
 class Bot
 {
   public:
-  Bot(const std::string &serverAddress, int userId, OrderType type)
+  Bot(const std::string &serverAddress, std::string name, int userId)
       : context(1), orderSocket(context, ZMQ_PUSH), subscriberSocket(context, ZMQ_SUB),
-        userId(userId), type(type)
+        userId(userId), name(name)
   {
     orderSocket.connect(serverAddress + ":5555");      // Connect to the order receiving socket
     subscriberSocket.connect(serverAddress + ":5556"); // Connect to the order book updates
@@ -19,7 +20,7 @@ class Bot
   }
   void start()
   {
-    spdlog::info("Starting Bot");
+    spdlog::info("Starting Bot {}", name);
     botThread = std::thread(&Bot::listenForUpdates, this);
   }
   void stop()
@@ -31,17 +32,19 @@ class Bot
       }
   };
 
-  OrderType getOrderType() const { return type; }
-  int       getUserId() const { return userId; }
+  int         getUserId() const { return userId; }
+  std::string getName() const { return name; }
 
   protected:
+  std::unique_ptr<OrderBook> orderBook;
+
   virtual void run() = 0; // Pure virtual function to be implemented by derived classes
   void         sendOrder(const nlohmann::json &order)
   {
     zmq::message_t orderMessage(order.dump().size());
     memcpy(orderMessage.data(), order.dump().data(), order.dump().size());
     orderSocket.send(orderMessage, zmq::send_flags::none);
-    spdlog::info("Sent order:\n{}", order.dump(4));
+    spdlog::info("[ {} ] Sent order:\n{}", name, order.dump(4));
   }
 
   void processOrderBookUpdate(const std::string &update)
@@ -53,17 +56,18 @@ class Bot
         // check if the order book is empty
         if(orderBookUpdate.empty())
           {
-            spdlog::warn("Received empty order book update");
+            spdlog::warn("[ {} ] Received empty order book update", name);
             return;
           }
 
-        orderBook = OrderBook::createFromJson(orderBookUpdate);
+        orderBook = OrderBook::fromJson(orderBookUpdate);
 
-        spdlog::debug("Received order book update: {} ", orderBook->totalOrders());
+        spdlog::debug("[ {} ] Received order book update: {} ", name, orderBook->totalOrders());
       }
     catch(const nlohmann::json::exception &e)
       {
-        spdlog::error("Failed to process order book update: {} - {}", e.what(), update);
+        spdlog::error("[ {} ] Failed to process order book update: {} - {}", name, e.what(),
+                      update);
       }
   }
 
@@ -82,12 +86,11 @@ class Bot
   }
 
   private:
-  zmq::context_t             context;
-  zmq::socket_t              orderSocket; // For sending orders to the server
-  zmq::socket_t              subscriberSocket;
-  int                        userId;
-  OrderType                  type;
-  std::unique_ptr<OrderBook> orderBook;
-  std::atomic<bool>          running{true}; // Control running state
-  std::thread                botThread;     // Thread for the bot's execution
+  zmq::context_t    context;
+  zmq::socket_t     orderSocket; // For sending orders to the server
+  zmq::socket_t     subscriberSocket;
+  std::string       name;
+  int               userId;
+  std::atomic<bool> running{true}; // Control running state
+  std::thread       botThread;     // Thread for the bot's execution
 };

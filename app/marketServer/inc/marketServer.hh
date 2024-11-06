@@ -6,6 +6,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 #include "orderBook.hh"
 #include "order.hh"
 #include "metrics.hh"
@@ -29,7 +30,11 @@ class MarketServer
     spdlog::info("[Server] Starting Market Server");
     running        = true;
     listenerThread = std::thread(&MarketServer::listenForMessages, this);
-    while(running) { tick(); }
+    while(running)
+      {
+        tick();
+        spdlog::info("Tick: {:<10} Orders: {:<10}", current_tick.load(), orderBook.totalOrders());
+      }
   }
 
   void stop()
@@ -48,7 +53,6 @@ class MarketServer
     current_tick++;
     orderBook.match();
     publishOrderBook();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 
   private:
@@ -65,11 +69,7 @@ class MarketServer
             spdlog::debug("[Server] Received message: {} ", receivedMessage);
             processMessage(receivedMessage);
           }
-        else
-          {
-            // Sleep for a short duration to prevent busy-waiting
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-          }
+        else { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
       }
   }
 
@@ -86,15 +86,13 @@ class MarketServer
         nlohmann::json parsed = nlohmann::json::parse(message);
         if(parsed.contains("type") && (parsed["type"] == "BUY" || parsed["type"] == "SELL"))
           {
-            auto newOrder = Order::createFromJson(parsed);
+            auto newOrder = Order::fromJson(parsed);
             if(newOrder)
               {
                 {
                   std::unique_lock lock(orderBook_mtx);
                   orderBook.addOrder(std::move(newOrder));
                 }
-                spdlog::info(" received order :[OrderBook size {:^5}] \n{}",
-                             orderBook.totalOrders(), parsed.dump(2));
               }
           }
         else { spdlog::warn(" {} Unknown message type: {}", current_tick.load(), message); }

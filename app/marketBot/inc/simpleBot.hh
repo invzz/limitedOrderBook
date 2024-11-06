@@ -4,8 +4,8 @@
 class SimpleBot : public Bot
 {
   public:
-  SimpleBot(const std::string &serverAddress, int userId, OrderType t)
-      : Bot(serverAddress, userId, t)
+  SimpleBot(const std::string &serverAddress, std::string name, int userId, OrderType t)
+      : Bot(serverAddress, name, userId), type(t)
   {
     rng.seed(std::random_device()());
   }
@@ -16,19 +16,20 @@ class SimpleBot : public Bot
     analyzeOrderBook();
 
     // generate a random price between 90 and 110
-    std::uniform_real_distribution<double> priceDist(90.0, 110.0);
+    std::uniform_real_distribution<double> priceDist(50.0, 150.0);
     double                                 price = priceDist(rng);
 
     // Generate a random order quantity between 1 and 10
-    std::uniform_int_distribution<int> quantityDist(1, 10);
+    std::uniform_int_distribution<int> quantityDist(1, 30);
     int                                quantity = quantityDist(rng);
 
-    std::unique_ptr<Order> order = std::make_unique<Order>(getOrderType(), price, quantity, getUserId());
+    std::unique_ptr<Order> order = std::make_unique<Order>(type, price, quantity, getUserId());
     sendOrder(order->toJson());
   }
 
   private:
   std::mt19937 rng;
+  OrderType    type;
 
   void analyzeOrderBook() { return; }
 };
