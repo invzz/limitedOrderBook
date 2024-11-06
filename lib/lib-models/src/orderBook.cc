@@ -34,8 +34,10 @@ void OrderBook::addOrder(std::shared_ptr<Order> new_order)
     }
 }
 
-void OrderBook::match()
+std::vector<std::shared_ptr<Trade>> OrderBook::match(int tick)
 {
+  std::vector<std::shared_ptr<Trade>> trades;
+
   // Acquire a unique lock for write operations on the order book
   std::unique_lock lock(mtx);
 
@@ -67,7 +69,7 @@ void OrderBook::match()
                 {
                   auto &sellOrder = *sellOrderIt;
 
-                  // pointer not ready
+                  // Pointer not ready
                   if(!sellOrder || !buyOrder)
                     {
                       ++sellOrderIt;
@@ -84,9 +86,6 @@ void OrderBook::match()
                   auto buyer  = buyOrder->getUserId();
                   auto seller = sellOrder->getUserId();
 
-                  int bid_id = buyOrder->getId();
-                  int ask_id = sellOrder->getId();
-
                   // Calculate the quantity to trade
                   int quantityTraded = std::min(buyOrder->getQuantity(), sellOrder->getQuantity());
 
@@ -94,18 +93,19 @@ void OrderBook::match()
                   buyOrder->updateQuantity(-quantityTraded);
                   sellOrder->updateQuantity(-quantityTraded);
 
-                  // log empty line
-                  spdlog::debug("");
-                  spdlog::debug("[match] sell_id : {:03}", ask_id);
-                  spdlog::debug("[match] bid_id : {:03}", bid_id);
-                  spdlog::debug("[match] buyer : {:03}", buyer);
-                  spdlog::debug("[match] seller : {:03}", seller);
-                  spdlog::debug("[match] quantity : {:03}", quantityTraded);
-                  spdlog::debug("[match] price : {:03}", ask_price);
+                  // Create the trade, passing the tick as an argument
+                  auto trade = std::make_shared<Trade>(tick,   // Pass the tick value here
+                                                       buyer,  // Buyer ID
+                                                       seller, // Seller ID
+                                                       sellOrder->getPrice(), // Trade price
+                                                       quantityTraded         // Trade quantity
+                  );
+
+                  // Add trade to the list of trades
+                  trades.push_back(trade);
 
                   // Remove filled orders
                   if(sellOrder->getQuantity() == 0) { sellOrderIt = sellOrders.erase(sellOrderIt); }
-
                   else { ++sellOrderIt; }
 
                   if(buyOrder->getQuantity() == 0)
@@ -115,6 +115,7 @@ void OrderBook::match()
                     }
                 }
 
+              // Check if the buy order is fully matched
               if(buyOrderIt == buyOrders.end())
                 {
                   break; // Break out of the buy order loop if all buy orders are matched
@@ -143,6 +144,8 @@ void OrderBook::match()
       // If no matches were made for this buy level, move to the next buy level
       if(it_buy != bids.end()) { ++it_buy; }
     }
+
+  return trades;
 }
 
 // Helper method to check if a buy and sell order can match

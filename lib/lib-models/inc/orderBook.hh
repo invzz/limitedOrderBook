@@ -11,11 +11,11 @@
 class OrderBook
 {
   public:
-  void           addOrder(std::shared_ptr<Order> new_order); // Change to shared_ptr
-  void           match();
-  int            getNextOrderId() { return next_order_id++; }
-  bool           isEmpty() { return bids.empty() && asks.empty(); }
-  nlohmann::json toJson();
+  void addOrder(std::shared_ptr<Order> new_order); // Change to shared_ptr
+  std::vector<std::shared_ptr<Trade>> match(int tick = 0);
+  int                                 getNextOrderId() { return next_order_id++; }
+  bool                                isEmpty() { return bids.empty() && asks.empty(); }
+  nlohmann::json                      toJson();
   std::vector<std::shared_ptr<Order>> getBestBid(); // Change to shared_ptr
   std::vector<std::shared_ptr<Order>> getBestAsk(); // Change to shared_ptr
 
