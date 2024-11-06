@@ -14,17 +14,13 @@ class Metrics
   public:
   Metrics() : totalProfit(0.0) {}
 
-  void addBuyTrade(const std::shared_ptr<Trade> &trade)
-  {
-    std::lock_guard<std::mutex> lock(mtx); // Lock mutex
-    buyTrades.push_back(trade);
-  }
+  void addBuyTrade(const std::shared_ptr<Trade> &trade) { 
+    std::lock_guard<std::mutex> lock(mtx);
+    buyTrades.push_back(trade); }
 
-  void addSellTrade(const std::shared_ptr<Trade> &trade)
-  {
-    std::lock_guard<std::mutex> lock(mtx); // Lock mutex
-    sellTrades.push_back(trade);
-  }
+  void addSellTrade(const std::shared_ptr<Trade> &trade) {
+    std::lock_guard<std::mutex> lock(mtx);
+    sellTrades.push_back(trade); }
 
   double calcProfit()
   {

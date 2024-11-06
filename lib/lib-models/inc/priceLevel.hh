@@ -3,7 +3,6 @@
 
 #include "order.hh"
 #include <vector>
-#include <memory>
 #include <mutex>
 #include <algorithm>
 #include <spdlog/spdlog.h>
@@ -19,10 +18,17 @@ class PriceLevel
   public:
   PriceLevel(double price) : price(price) {}
 
+  int getSize() const
+  {
+    std::lock_guard<std::mutex> lock(mtx); // Lock for thread safety
+    return orders.size();
+  }
+
   public:
   nlohmann::json toJson() const
   {
-    nlohmann::json json;
+    std::lock_guard<std::mutex> lock(mtx); // Lock for thread safety
+    nlohmann::json              json;
     json["price"] = price;
 
     nlohmann::json ordersJson = nlohmann::json::array();
@@ -33,6 +39,20 @@ class PriceLevel
     json["orders"] = ordersJson;
 
     return json;
+  }
+
+  static std::unique_ptr<PriceLevel> createFromJson(const nlohmann::json &priceLevelData)
+  {
+    double price      = priceLevelData["price"];
+    auto   priceLevel = std::make_unique<PriceLevel>(price);
+
+    // Deserialize each order within this price level
+    for(const auto &orderData : priceLevelData["orders"])
+      {
+        auto order = Order::createFromJson(orderData);
+        priceLevel->orders.push_back(std::move(order));
+      }
+    return priceLevel;
   }
 
   void addOrder(std::unique_ptr<Order> order)

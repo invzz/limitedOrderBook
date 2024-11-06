@@ -4,8 +4,7 @@
 #include "order.hh"
 #include "priceLevel.hh"
 #include <map>
-#include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <nlohmann/json.hpp>
 #include "metrics.hh"
 
@@ -13,7 +12,7 @@ class OrderBook
 {
   public:
   void addOrder(std::unique_ptr<Order> new_order);
-  void match(int tick, std::unordered_map<int, Metrics *> metricsMap = {});
+  void match();
   int  getNextOrderId() { return next_order_id++; }
 
   bool isEmpty() { return buy_orders.empty() && sell_orders.empty(); }
@@ -25,12 +24,11 @@ class OrderBook
     return buy_orders.rbegin()->first;
   }
 
-  nlohmann::json toJson() const
+  nlohmann::json toJson()
   {
-    nlohmann::json json;
-
+    std::shared_lock lock(mtx);
+    nlohmann::json   json;
     {
-      std::lock_guard<std::mutex> lock(mtx); // Lock for thread safety
       // Serialize buy orders
       nlohmann::json buyOrdersJson = nlohmann::json::array();
       for(const auto &[price, level] : buy_orders)
@@ -47,15 +45,45 @@ class OrderBook
         }
       json["sell_orders"] = sellOrdersJson;
     }
-
     return json;
+  }
+
+  static std::unique_ptr<OrderBook> createFromJson(const nlohmann::json &orderBookData)
+  {
+    auto orderBook = std::make_unique<OrderBook>();
+
+    // Deserialize buy orders
+    for(const auto &buyLevelData : orderBookData["buy_orders"])
+      {
+        auto buyLevel                               = PriceLevel::createFromJson(buyLevelData);
+        orderBook->buy_orders[buyLevel->getPrice()] = std::move(buyLevel);
+      }
+
+    // Deserialize sell orders
+    for(const auto &sellLevelData : orderBookData["sell_orders"])
+      {
+        auto sellLevel                                = PriceLevel::createFromJson(sellLevelData);
+        orderBook->sell_orders[sellLevel->getPrice()] = std::move(sellLevel);
+      }
+
+    return orderBook;
   }
 
   void clear()
   {
-    std::lock_guard<std::mutex> lock(mtx); // Lock for thread safety
+    std::unique_lock lock(mtx);
     buy_orders.clear();
     sell_orders.clear();
+  }
+
+  int totalOrders()
+  {
+    std::shared_lock lock(mtx);
+    // for each priceLevel use getSize() to get the number of orders
+    int total = 0;
+    for(const auto &[price, level] : buy_orders) total += level->getSize();
+    for(const auto &[price, level] : sell_orders) total += level->getSize();
+    return total;
   }
 
   // Getters
@@ -65,7 +93,7 @@ class OrderBook
   private:
   std::map<double, std::unique_ptr<PriceLevel>> buy_orders;
   std::map<double, std::unique_ptr<PriceLevel>> sell_orders;
-  mutable std::mutex                            mtx; // Mutex to protect access to the order book
+  std::shared_mutex                             mtx; // Mutex to protect access to the order book
 
   bool canMatch(double buy_price, double sell_price);
   int  next_order_id = 1;

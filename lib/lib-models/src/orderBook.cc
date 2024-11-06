@@ -18,6 +18,8 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
 
   if(type == OrderType::BUY)
     {
+      std::unique_lock lock(mtx);
+
       // If there are no buy orders at this price, create a new PriceLevel
       if(buy_orders.find(price) == buy_orders.end())
         {
@@ -27,6 +29,8 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
     }
   else if(type == OrderType::SELL)
     {
+      std::unique_lock lock(mtx);
+
       // If there are no sell orders at this price, create a new PriceLevel
       if(sell_orders.find(price) == sell_orders.end())
         {
@@ -36,91 +40,109 @@ void OrderBook::addOrder(std::unique_ptr<Order> new_order)
     }
 }
 
-void OrderBook::match(int tick, std::unordered_map<int, Metrics *> metricsMap)
+void OrderBook::match()
 {
+  // Acquire a unique lock for write operations on the order book
+  std::unique_lock lock(mtx);
+
   // Iterate through all buy orders
   for(auto it_buy = buy_orders.begin(); it_buy != buy_orders.end();)
     {
-      double buy_price = it_buy->first;               // Get the buy price
+      double bid_price = it_buy->first;               // Get the buy price
       auto  &buyOrders = it_buy->second->getOrders(); // Get the buy orders
 
       // Iterate through all sell orders
       for(auto it_sell = sell_orders.begin(); it_sell != sell_orders.end();)
         {
-          double sell_price = it_sell->first; // Get the sell price
+          double ask_price = it_sell->first; // Get the sell price
 
           // Check if we can match the buy and sell orders
-          if(canMatch(buy_price, sell_price))
+          if(!canMatch(bid_price, ask_price))
             {
-              for(auto &buyOrder : buyOrders)
+              ++it_sell; // Move to the next sell level if no match
+              continue;
+            }
+
+          auto &sellOrders = it_sell->second->getOrders();
+
+          for(auto buyOrderIt = buyOrders.begin(); buyOrderIt != buyOrders.end();)
+            {
+              auto &buyOrder = *buyOrderIt;
+
+              for(auto sellOrderIt = sellOrders.begin(); sellOrderIt != sellOrders.end();)
                 {
-                  for(auto &sellOrder : it_sell->second->getOrders())
+                  auto &sellOrder = *sellOrderIt;
+
+                  // pointer not ready
+                  if(!sellOrder || !buyOrder)
                     {
+                      ++sellOrderIt;
+                      continue;
+                    }
 
-                      // pointer not ready
-                      if(sellOrder == nullptr || buyOrder == nullptr) continue;
-                      
-                      // Prevent self-trading
-                      if(buyOrder->getUserId() == sellOrder->getUserId()) continue;
+                  // Prevent self-trading
+                  if(buyOrder->getUserId() == sellOrder->getUserId())
+                    {
+                      ++sellOrderIt;
+                      continue;
+                    }
 
-                      auto buyer  = buyOrder->getUserId();
-                      auto seller = sellOrder->getUserId();
+                  auto buyer  = buyOrder->getUserId();
+                  auto seller = sellOrder->getUserId();
 
-                      int bid_id  = buyOrder->getId();
-                      int sell_id = sellOrder->getId();
+                  int bid_id = buyOrder->getId();
+                  int ask_id = sellOrder->getId();
 
-                      // Calculate the quantity to trade
-                      int quantityTraded =
-                        std::min(buyOrder->getQuantity(), sellOrder->getQuantity());
+                  // Calculate the quantity to trade
+                  int quantityTraded = std::min(buyOrder->getQuantity(), sellOrder->getQuantity());
 
-                      // Update quantities
-                      buyOrder->updateQuantity(-quantityTraded);
-                      sellOrder->updateQuantity(-quantityTraded);
+                  // Update quantities
+                  buyOrder->updateQuantity(-quantityTraded);
+                  sellOrder->updateQuantity(-quantityTraded);
 
-                      spdlog::debug("[ OrderBook ] :: [MATCH!] :: [ BUY {:03} ] [ SELL {:03} ] : [ "
-                                    "{:03} ] at price [ {:.2f} ]",
-                                    bid_id, sell_id, quantityTraded, sell_price);
+                  // log empty line
+                  spdlog::debug("");
+                  spdlog::debug("[match] sell_id : {:03}", ask_id);
+                  spdlog::debug("[match] bid_id : {:03}", bid_id);
+                  spdlog::debug("[match] buyer : {:03}", buyer);
+                  spdlog::debug("[match] seller : {:03}", seller);
+                  spdlog::debug("[match] quantity : {:03}", quantityTraded);
+                  spdlog::debug("[match] price : {:03}", ask_price);
 
-                      std::shared_ptr trade =
-                        std::make_shared<Trade>(tick, buyer, seller, sell_price, quantityTraded);
+                  // Remove filled orders
+                  if(sellOrder->getQuantity() == 0) { sellOrderIt = sellOrders.erase(sellOrderIt); }
 
-                      metricsMap[buyer]->addBuyTrade(trade);
-                      metricsMap[seller]->addSellTrade(trade);
+                  else { ++sellOrderIt; }
 
-                      // Remove filled orders
-                      if(sellOrder->getQuantity() == 0)
-                        {
-                          it_sell->second->removeOrder(sellOrder.get());
-                        }
-
-                      if(buyOrder->getQuantity() == 0)
-                        {
-                          it_buy->second->removeOrder(buyOrder.get());
-                          break; // Break out of the inner loop if the buy order is filled
-                        }
+                  if(buyOrder->getQuantity() == 0)
+                    {
+                      buyOrderIt = buyOrders.erase(buyOrderIt);
+                      break; // Break out of the inner loop if the buy order is filled
                     }
                 }
 
-              // Check if the sell level is empty after processing
-              if(it_sell->second->getOrders().empty())
+              if(buyOrderIt == buyOrders.end())
                 {
-                  it_sell = sell_orders.erase(it_sell); // Erase and get the next iterator
+                  break; // Break out of the buy order loop if all buy orders are matched
                 }
-              else
-                {
-                  ++it_sell; // Move to the next sell level
-                }
+              else { ++buyOrderIt; }
+            }
 
-              // Check if the buy level is empty after processing
-              if(it_buy->second->getOrders().empty())
-                {
-                  it_buy = buy_orders.erase(it_buy); // Erase and get the next iterator
-                  break; // Break out of the sell order loop since all buy orders are matched
-                }
+          // Check if the sell level is empty after processing
+          if(sellOrders.empty())
+            {
+              it_sell = sell_orders.erase(it_sell); // Erase and get the next iterator
             }
           else
             {
-              ++it_sell; // Move to the next sell level if no match
+              ++it_sell; // Move to the next sell level
+            }
+
+          // Check if the buy level is empty after processing
+          if(buyOrders.empty())
+            {
+              it_buy = buy_orders.erase(it_buy); // Erase and get the next iterator
+              break; // Break out of the sell order loop since all buy orders are matched
             }
         }
 

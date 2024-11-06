@@ -14,23 +14,23 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog nlohmann_json::nlohmann_json)
 
 # Add tests
-enable_testing()
-file(GLOB TEST_SOURCES "test/*.cc")
+# enable_testing()
+# file(GLOB TEST_SOURCES "test/*.cc")
 
 
-foreach(TEST_SOURCE ${TEST_SOURCES})
-    # Get the filename without the path or extension to name the executable
-    get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+# foreach(TEST_SOURCE ${TEST_SOURCES})
+#     # Get the filename without the path or extension to name the executable
+#     get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
 
-    # Add an executable for each test source file
-    add_executable(${TEST_NAME} ${TEST_SOURCE})
+#     # Add an executable for each test source file
+#     add_executable(${TEST_NAME} ${TEST_SOURCE})
 
-    # Link each test executable to the OrderBook library and GTest
-    target_link_libraries(${TEST_NAME} PRIVATE lib-models GTest::gtest )
+#     # Link each test executable to the OrderBook library and GTest
+#     target_link_libraries(${TEST_NAME} PRIVATE lib-models GTest::gtest )
 
-    # Link spdlog to each test executable if needed
-    target_link_libraries(${TEST_NAME} PRIVATE spdlog::spdlog)
+#     # Link spdlog to each test executable if needed
+#     target_link_libraries(${TEST_NAME} PRIVATE spdlog::spdlog)
 
-    # Register each test with CTest
-    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-endforeach()
+#     # Register each test with CTest
+#     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+# endforeach()

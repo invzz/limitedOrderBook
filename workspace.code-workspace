@@ -239,7 +239,8 @@
             "ranges": "cpp",
             "random": "cpp",
             "numeric": "cpp",
-            "valarray": "cpp"
+            "valarray": "cpp",
+            "shared_mutex": "cpp"
         },
         "cmake.debugConfig": {
             "args": [],

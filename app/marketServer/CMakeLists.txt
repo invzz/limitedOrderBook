@@ -1,16 +1,13 @@
 project(market-server)
 
 
-
-
-
 # Main application source
 set(SOURCES marketServer.cc)
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE cppzmq-static  lib-models lib-market-simulator spdlog::spdlog nlohmann_json::nlohmann_json )
+target_link_libraries(${PROJECT_NAME} PRIVATE cppzmq-static lib-models spdlog::spdlog_header_only nlohmann_json::nlohmann_json )
 
-# target_include_directories(${PROJECT_NAME} PRIVATE ${ZeroMQ_INCLUDE_DIRS})
-
+# Set include directories to be exported
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)

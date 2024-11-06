@@ -25,9 +25,36 @@ class Order
     };
   }
   // Constructor
-  Order::Order(OrderType type, double price, int quantity, int userId)
-      : id(0), type(type), price(price), quantity(quantity), userId(userId)
-  {}
+  Order(OrderType t, double p, int q, int uId)
+  {
+    id       = 0;
+    type     = t;
+    price    = p;
+    quantity = q;
+    userId   = uId;
+  }
+
+  // Constructor
+  Order(int i, OrderType t, double p, int q, int uId)
+  {
+    id       = i;
+    type     = t;
+    price    = p;
+    quantity = q;
+    userId   = uId;
+  }
+
+  static std::unique_ptr<Order> createFromJson(const nlohmann::json &orderData)
+  {
+    int       id       = orderData["id"];
+    OrderType type     = (orderData["type"] == "BUY") ? OrderType::BUY : OrderType::SELL;
+    double    price    = orderData["price"];
+    int       quantity = orderData["quantity"];
+    int       userId   = orderData["userId"];
+    auto      order    = std::make_unique<Order>(type, price, quantity, userId);
+    order->setId(id);
+    return order;
+  }
 
   // Getters
   int       getId() const { return id; };
