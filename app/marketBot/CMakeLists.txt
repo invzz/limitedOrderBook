@@ -4,7 +4,7 @@ project(marketbot)
 find_package(cppzmq REQUIRED)
 
 # Main application source
-set(SOURCES marketbot.cc )
+set(SOURCES src/main.cc )
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})

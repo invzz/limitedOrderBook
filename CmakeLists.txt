@@ -3,14 +3,10 @@ cmake_minimum_required(VERSION 3.10)
 # Define the project name and C++ standard globally
 project(MarketSimulator VERSION 1.0)
 
-
-# Find spdlog (make sure it's installed on your system or available as a dependency)
-# I usually use vcpkg to install spdlog
 find_package(spdlog REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/dist/${CMAKE_BUILD_TYPE})
 add_subdirectory(lib)
