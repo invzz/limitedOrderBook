@@ -11,7 +11,7 @@
 class OrderBook
 {
   public:
-  void addOrder(std::shared_ptr<Order> new_order); // Change to shared_ptr
+  void                                addOrder(std::shared_ptr<Order> new_order); // Change to shared_ptr
   std::vector<std::shared_ptr<Trade>> match(int tick = 0);
   int                                 getNextOrderId() { return next_order_id++; }
   bool                                isEmpty() { return bids.empty() && asks.empty(); }
@@ -28,10 +28,10 @@ class OrderBook
     asks.clear();
   }
 
-  int totalOrders()
+  size_t totalOrders()
   {
     std::shared_lock lock(mtx);
-    int              total = 0;
+    size_t           total = 0;
     for(const auto &[price, level] : bids) total += level->getSize();
     for(const auto &[price, level] : asks) total += level->getSize();
     return total;

@@ -163,7 +163,6 @@ std::vector<std::shared_ptr<Order>> OrderBook::getBestBid()
     }
 
   // Get the highest price from the buy orders (best bid)
-  double bestBidPrice = bids.rbegin()->first; // rbegin gives the iterator to the highest key
 
   // Return a copy of the orders at the best bid price level
   return std::move(bids.rbegin()->second->getOrders());

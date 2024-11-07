@@ -8,20 +8,22 @@
 class Order
 {
   private:
-  int       id;
-  int       userId;
-  int       quantity;
-  double    price;
   OrderType type;
+  double    price;
+  int       quantity;
+  int       userId;
+  int       id;
 
   public:
   // Constructor
-  Order(OrderType t, double p, int q, int uId) : id(0), type(t), price(p), quantity(q), userId(uId)
-  {}
+  Order(OrderType t, double p, int q, int uId) : type(t), price(p), quantity(q), userId(uId)
+  {
+    id = 0;
+  }
 
   // Constructor
-  Order(int i, OrderType t, double p, int q, int uId)
-      : id(i), type(t), price(p), quantity(q), userId(uId)
+  Order(OrderType t, double p, int q, int uId, int i)
+      : type(t), price(p), quantity(q), userId(uId), id(i)
   {}
 
   // Convert to JSON

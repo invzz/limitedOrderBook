@@ -4,8 +4,7 @@
 class SimpleBot : public Bot
 {
   public:
-  SimpleBot(const std::string &serverAddress, std::string name, int userId, OrderType t)
-      : Bot(serverAddress, name, userId), type(t)
+  SimpleBot(const std::string &serverAddress, std::string name, int userId, OrderType t) : Bot(serverAddress, name, userId), type(t)
   {
     rng.seed(std::random_device()());
   }

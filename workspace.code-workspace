@@ -6,245 +6,34 @@
         },
     ],
     "settings": {
+        "editor.bracketPairColorization.enabled": true,
+        "editor.mouseWheelZoom": true,
+        "terminal.integrated.fontFamily": "FiraCode Nerd Font Mono",
+        "terminal.integrated.fontSize": 12,
+        "terminal.integrated.fontWeight": "normal",
+        "terminal.integrated.fontWeightBold": "bold",
+        "terminal.integrated.cursorStyle": "underline",
+        "terminal.integrated.cursorWidth": 1,
+        "terminal.integrated.cursorBlinking": true,
+
         "cmake.cmakePath": "cmake",
-        "explorer.sortOrder": "type",
         "cmake.clearOutputBeforeBuild": true,
-        "cmake.generator": "Ninja",
-        "cmake.loggingLevel": "info",
-        "notebook.output.fontFamily": "Fira Code",
-        "notebook.output.fontSize": 10,
-        "notebook.output.lineHeight": 1,
-        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-        "C_Cpp.clang_format_style": "file:${workspaceFolder}/.clang-format",
+        "cmake.generator": "Visual Studio 17 2022",
         "cmake.useCMakePresets": "never",
-        "C_Cpp.intelliSenseEngineFallback": "disabled",
-        "editor.formatOnType": true,
-        "output.smartScroll.enabled": true,
-        "cmake.outputLogEncoding": "CMAKE -- build",
-        "terminal.integrated.lineHeight": 1,
-        "terminal.integrated.fontFamily": "Fira Code",
-        "terminal.integrated.fontSize": 10,
-        "terminal.integrated.fontWeight": 500,
-        "editor.fontFamily": "Fira Code",
-        "editor.fontLigatures": true,
-        "editor.fontSize": 12,
-        "editor.fontWeight": "450",
-        "editor.formatOnSave": true,
-        "debug.console.fontFamily": "Fira Code",
-        "debug.console.fontSize": 10,
-        "explorer.excludeGitIgnore": true,
         "cmake.options.statusBarVisibility": "visible",
-        "[Log]": {
-            "editor.fontFamily": "Fira Code",
-            "editor.fontLigatures": true,
-            "editor.formatOnSave": true,
-            "editor.fontSize": 10,
-        },
         "cmake.configureSettings": {
             "CMAKE_TOOLCHAIN_FILE": "${env:VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-        },
-        "files.encoding": "utf8",
-        "files.exclude": {
-            "**/.git": true,
-            "**/build": true,
-        },
-        "editor.tokenColorCustomizations": {
-            "comments": "#627264",
-            "textMateRules": [
-                {
-                    "scope": "markup.other.log.error",
-                    "settings": {
-                        "foreground": "#FF0000"
-                    }
-                },
-                {
-                    "scope": "markup.other.log.warn",
-                    "settings": {
-                        "foreground": "#e7f700cc"
-                    }
-                },
-                {
-                    "scope": "markup.other.log.info",
-                    "settings": {
-                        "foreground": "#2cd3c5"
-                    }
-                },
-                {
-                    "scope": "markup.other.log.debug",
-                    "settings": {
-                        "foreground": "#4e8c54"
-                    }
-                },
-                {
-                    "scope": "markup.other.log.highlight",
-                    "settings": {
-                        "foreground": "#19ff04"
-                    }
-                },
-                {
-                    "scope": "entity.name.function.preprocessor",
-                    "settings": {
-                        "foreground": "#B5DFCA",
-                        "fontStyle": ""
-                    }
-                },
-                {
-                    "scope": "string.quoted.double",
-                    "settings": {
-                        "foreground": "#D4B483",
-                        "fontStyle": ""
-                    }
-                },
-                {
-                    "scope": "variable.parameter",
-                    "settings": {
-                        "foreground": "#FF9d70",
-                        "fontStyle": "italic"
-                    }
-                },
-                {
-                    "scope": "entity.name.function",
-                    "settings": {
-                        "foreground": "#DCDDF9",
-                        "fontStyle": "bold"
-                    }
-                },
-                {
-                    "scope": "entity.name.type",
-                    "settings": {
-                        "foreground": "#9EB7E5",
-                        "fontStyle": "bold"
-                    }
-                },
-                {
-                    "scope": "keyword.control",
-                    "settings": {
-                        "foreground": "#FF729F",
-                        "fontStyle": "bold"
-                    }
-                },
-                {
-                    "scope": "variable.other.global",
-                    "settings": {
-                        "foreground": "#8CFF98",
-                        "fontStyle": "italic"
-                    }
-                },
-                {
-                    "scope": "variable.other.local",
-                    "settings": {
-                        "foreground": "#EEF5DB",
-                        "fontStyle": ""
-                    }
-                }
-            ]
-        },
-        "workbench.colorCustomizations": {
-            "titleBar.border": "#393934",
-            "tab.border": "#393934",
-            "panel.border": "#393934",
-            "sideBar.border": "#393934",
-            "activityBar.border": "#393934",
-            "statusBar.border": "#393934",
-            "editorGroup.border": "#393934",
-            "editorGroupHeader.tabsBorder": "#393934"
-        },
-        "files.associations": {
-            "book.h": "c",
-            "cmocka.h": "c",
-            "iostream": "cpp",
-            "algorithm": "cpp",
-            "any": "cpp",
-            "array": "cpp",
-            "atomic": "cpp",
-            "bit": "cpp",
-            "bitset": "cpp",
-            "cctype": "cpp",
-            "charconv": "cpp",
-            "chrono": "cpp",
-            "clocale": "cpp",
-            "cmath": "cpp",
-            "compare": "cpp",
-            "complex": "cpp",
-            "concepts": "cpp",
-            "condition_variable": "cpp",
-            "coroutine": "cpp",
-            "csignal": "cpp",
-            "cstddef": "cpp",
-            "cstdint": "cpp",
-            "cstdio": "cpp",
-            "cstdlib": "cpp",
-            "cstring": "cpp",
-            "ctime": "cpp",
-            "cwchar": "cpp",
-            "exception": "cpp",
-            "expected": "cpp",
-            "filesystem": "cpp",
-            "format": "cpp",
-            "forward_list": "cpp",
-            "fstream": "cpp",
-            "functional": "cpp",
-            "future": "cpp",
-            "initializer_list": "cpp",
-            "iomanip": "cpp",
-            "ios": "cpp",
-            "iosfwd": "cpp",
-            "istream": "cpp",
-            "iterator": "cpp",
-            "limits": "cpp",
-            "list": "cpp",
-            "locale": "cpp",
-            "map": "cpp",
-            "memory": "cpp",
-            "mutex": "cpp",
-            "new": "cpp",
-            "optional": "cpp",
-            "ostream": "cpp",
-            "ratio": "cpp",
-            "set": "cpp",
-            "source_location": "cpp",
-            "span": "cpp",
-            "sstream": "cpp",
-            "stdexcept": "cpp",
-            "stop_token": "cpp",
-            "streambuf": "cpp",
-            "string": "cpp",
-            "system_error": "cpp",
-            "thread": "cpp",
-            "tuple": "cpp",
-            "type_traits": "cpp",
-            "typeinfo": "cpp",
-            "unordered_map": "cpp",
-            "unordered_set": "cpp",
-            "utility": "cpp",
-            "variant": "cpp",
-            "vector": "cpp",
-            "xfacet": "cpp",
-            "xhash": "cpp",
-            "xiosbase": "cpp",
-            "xlocale": "cpp",
-            "xlocbuf": "cpp",
-            "xlocinfo": "cpp",
-            "xlocmes": "cpp",
-            "xlocmon": "cpp",
-            "xlocnum": "cpp",
-            "xloctime": "cpp",
-            "xmemory": "cpp",
-            "xstring": "cpp",
-            "xtr1common": "cpp",
-            "xtree": "cpp",
-            "xutility": "cpp",
-            "deque": "cpp",
-            "queue": "cpp",
-            "ranges": "cpp",
-            "random": "cpp",
-            "numeric": "cpp",
-            "valarray": "cpp",
-            "shared_mutex": "cpp"
         },
         "cmake.debugConfig": {
             "args": [],
             "console": "integratedTerminal",
-        }
+        },
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+        "C_Cpp.clang_format_style": "file:${workspaceFolder}/.clang-format",
+        "explorer.sortOrder": "type",
+        "explorer.excludeGitIgnore": true,
+        "files.associations": {
+            "shared_mutex": "cpp"
+        },
     },
 }

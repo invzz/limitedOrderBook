@@ -11,8 +11,7 @@ class Bot
 {
   public:
   Bot(const std::string &serverAddress, std::string name, int userId)
-      : context(1), orderSocket(context, ZMQ_PUSH), subscriberSocket(context, ZMQ_SUB),
-        userId(userId), name(name)
+      : context(1), orderSocket(context, ZMQ_PUSH), subscriberSocket(context, ZMQ_SUB), name(name), userId(userId)
   {
     orderSocket.connect(serverAddress + ":5555");      // Connect to the order receiving socket
     subscriberSocket.connect(serverAddress + ":5556"); // Connect to the order book updates
@@ -66,8 +65,7 @@ class Bot
       }
     catch(const nlohmann::json::exception &e)
       {
-        spdlog::error("[ {} ] Failed to process order book update: {} - {}", name, e.what(),
-                      update);
+        spdlog::error("[ {} ] Failed to process order book update: {} - {}", name, e.what(), update);
       }
   }
 

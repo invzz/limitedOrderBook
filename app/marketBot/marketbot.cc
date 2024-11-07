@@ -13,7 +13,7 @@ int main()
   SmartBot    smartBot(serverAddress, "smarter", 3);
   buyerBot.start();
   sellerBot.start();
-  sellerBot2.start();
+  // sellerBot2.start();
   smartBot.start();
   while(true) {}
   buyerBot.stop();

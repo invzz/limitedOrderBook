@@ -15,7 +15,7 @@ class PriceLevel
   public:
   PriceLevel(double price) : price(price) {}
 
-  int getSize() const
+  size_t getSize() const
   {
     std::lock_guard<std::mutex> lock(mtx); // Lock for thread safety
     return orders.size();

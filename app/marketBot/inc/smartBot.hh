@@ -4,11 +4,7 @@
 class SmartBot : public Bot
 {
   public:
-  SmartBot(const std::string &serverAddress, std::string name, int userId)
-      : Bot(serverAddress, name, userId)
-  {
-    rng.seed(std::random_device()());
-  }
+  SmartBot(const std::string &serverAddress, std::string name, int userId) : Bot(serverAddress, name, userId) { rng.seed(std::random_device()()); }
 
   protected:
   void run() override
@@ -41,16 +37,10 @@ class SmartBot : public Bot
   }
 
   // Function to calculate the average price between the best ask and best bid
-  double calculateAvgPrice(double bestBidPrice, double bestAskPrice)
-  {
-    return (bestBidPrice + bestAskPrice) / 2;
-  }
+  double calculateAvgPrice(double bestBidPrice, double bestAskPrice) { return (bestBidPrice + bestAskPrice) / 2; }
 
   // Function to calculate the spread between the best ask and best bid
-  double calculateSpread(double bestBidPrice, double bestAskPrice)
-  {
-    return bestAskPrice - bestBidPrice;
-  }
+  double calculateSpread(double bestBidPrice, double bestAskPrice) { return bestAskPrice - bestBidPrice; }
 
   // Function to determine if a buy order should be placed
   bool shouldPlaceBuyOrder(double bestBidPrice, double avgPrice, double spread)
@@ -65,10 +55,7 @@ class SmartBot : public Bot
   }
 
   // Helper function to place an order (either buy or sell)
-  void placeOrder(OrderType type, double price, int quantity)
-  {
-    orders.push_back(std::make_unique<Order>(type, price, quantity, getUserId()));
-  }
+  void placeOrder(OrderType type, double price, int quantity) { orders.push_back(std::make_unique<Order>(type, price, quantity, getUserId())); }
 
   // The main analysis function that uses the smaller helper functions
   void analyzeOrderBook()
@@ -100,17 +87,15 @@ class SmartBot : public Bot
       {
         if(shouldPlaceBuyOrder(bestBidPrice, avgPrice, spread))
           {
-            double targetBuyPrice =
-              bestBidPrice + aggressivenessFactor * spread; // Buy slightly above the best bid
-            int targetQuantity = totalQuantityAtAsk > 1 ? totalQuantityAtAsk / 2 : 1;
+            double targetBuyPrice = bestBidPrice + aggressivenessFactor * spread; // Buy slightly above the best bid
+            int    targetQuantity = totalQuantityAtAsk > 1 ? totalQuantityAtAsk / 2 : 1;
             placeOrder(OrderType::BUY, targetBuyPrice, targetQuantity);
           }
 
         if(shouldPlaceSellOrder(bestAskPrice, avgPrice, spread))
           {
-            double targetSellPrice =
-              bestAskPrice - aggressivenessFactor * spread; // Sell slightly below the best ask
-            int targetQuantity = totalQuantityAtBid > 1 ? totalQuantityAtBid / 2 : 1;
+            double targetSellPrice = bestAskPrice - aggressivenessFactor * spread; // Sell slightly below the best ask
+            int    targetQuantity  = totalQuantityAtBid > 1 ? totalQuantityAtBid / 2 : 1;
             placeOrder(OrderType::SELL, targetSellPrice, targetQuantity);
           }
       }
@@ -120,7 +105,7 @@ class SmartBot : public Bot
         if(shouldPlaceBuyOrder(bestBidPrice, avgPrice, spread))
           {
             double targetBuyPrice = bestBidPrice; // Buy at the best bid
-            int    targetQuantity = totalQuantityAtAsk > 1 ? totalQuantityAtAsk / 2 : 1;
+            targetQuantity        = totalQuantityAtAsk > 1 ? totalQuantityAtAsk / 2 : 1;
             placeOrder(OrderType::BUY, targetBuyPrice, targetQuantity);
           }
 

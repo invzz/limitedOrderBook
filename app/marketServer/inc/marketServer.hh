@@ -11,14 +11,16 @@
 #include "order.hh"
 #include "metrics.hh"
 
+#define PULL_ADDRESS "tcp://localhost:5555"
+#define PUB_ADDRESS  "tcp://localhost:5556"
+
 class MarketServer
 {
   public:
-  MarketServer()
-      : context(1), pullSocket(context, ZMQ_PULL), pubSocket(context, ZMQ_PUB), running(false)
+  MarketServer() : context(1), pullSocket(context, ZMQ_PULL), pubSocket(context, ZMQ_PUB), running(false)
   {
-    pullSocket.bind("tcp://*:5555"); // For receiving orders
-    pubSocket.bind("tcp://*:5556");  // For publishing order book updates
+    pullSocket.bind(PULL_ADDRESS); // For receiving orders
+    pubSocket.bind(PUB_ADDRESS);   // For publishing order book updates
   }
 
   ~MarketServer() { stop(); }
@@ -33,7 +35,7 @@ class MarketServer
     while(running)
       {
         tick();
-        spdlog::info("Tick: {:<10} Orders: {:<10}", current_tick.load(), orderBook.totalOrders());
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
   }
 
@@ -51,7 +53,13 @@ class MarketServer
   void tick()
   {
     current_tick++;
-    orderBook.match();
+
+    auto trades = orderBook.match(current_tick.load());
+
+    auto format = "[ {} ] [ {:2} --> {:2} ] [ {:2} * {:>3.2f} ]";
+
+    for(auto &trade : trades) { spdlog::info(format, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice()); }
+
     publishOrderBook();
   }
 
@@ -91,6 +99,8 @@ class MarketServer
               {
                 {
                   std::unique_lock lock(orderBook_mtx);
+                  createMetrics(newOrder->getUserId());
+                  createMetrics(newOrder->getUserId());
                   orderBook.addOrder(std::move(newOrder));
                 }
               }
@@ -99,8 +109,7 @@ class MarketServer
       }
     catch(const nlohmann::json::exception &e)
       {
-        spdlog::error("{} Failed to process message: {} - {}", current_tick.load(), e.what(),
-                      message);
+        spdlog::error("{} Failed to process message: {} - {}", current_tick.load(), e.what(), message);
       }
   }
 
