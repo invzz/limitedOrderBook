@@ -58,7 +58,12 @@ class MarketServer
 
     auto format = "[ {} ] [ {:2} --> {:2} ] [ {:2} * {:>3.2f} ]";
 
-    for(auto &trade : trades) { spdlog::info(format, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice()); }
+    for(auto &trade : trades)
+      {
+        spdlog::info(format, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice());
+        metrics[trade->getBuyerId()]->addBuyTrade(trade);
+        metrics[trade->getSellerId()]->addSellTrade(trade);
+      }
 
     publishOrderBook();
   }
@@ -83,12 +88,13 @@ class MarketServer
 
   void createMetrics(int userId)
   {
-    std::unique_lock lock(metrics_mtx);
+    std::scoped_lock lock(metrics_mtx);
     if(metrics.find(userId) == metrics.end()) { metrics[userId] = std::make_unique<Metrics>(); }
   }
 
   void processMessage(const std::string &message)
   {
+    int POSITION_LIMIT = 20;
     try
       {
         nlohmann::json parsed = nlohmann::json::parse(message);
@@ -97,10 +103,44 @@ class MarketServer
             auto newOrder = Order::fromJson(parsed);
             if(newOrder)
               {
+                int userId = newOrder->getUserId();
+                createMetrics(userId);
+
+                // validate the order
+                if(newOrder->getQuantity() <= 0)
+                  {
+                    spdlog::warn("[Server] Order rejected: quantity {} cannot be negative.", newOrder->getPrice(), newOrder->getQuantity());
+                    return;
+                  }
+
+                if(newOrder->getPrice() <= 0)
+                  {
+                    spdlog::warn("[Server] Order rejected: price {} cannot be negative.", newOrder->getPrice(), newOrder->getQuantity());
+                    return;
+                  }
+
+                // for seller bots, set the user id to a negative value
+                if(newOrder->getUserId() < 0) { POSITION_LIMIT = 300; }
+
+                // check if the user is within the position limit
+                int  quantity = newOrder->getQuantity();
+                bool isBuy    = (newOrder->getType() == OrderType::BUY);
+                bool isSell   = (newOrder->getType() == OrderType::SELL);
+
+                int qtyCheck = isBuy ? quantity : isSell ? -quantity : 0;
+
+                {
+                  std::shared_lock lock(metrics_mtx);
+                  if(!metrics[userId]->isWithinLimit(qtyCheck, POSITION_LIMIT))
+                    {
+                      spdlog::warn("[Server] Order rejected: User {} exceeds position limit with quantity {}", userId, quantity);
+                      return;
+                    }
+                }
+
+                // add the order to the order book
                 {
                   std::unique_lock lock(orderBook_mtx);
-                  createMetrics(newOrder->getUserId());
-                  createMetrics(newOrder->getUserId());
                   orderBook.addOrder(std::move(newOrder));
                 }
               }
@@ -118,13 +158,15 @@ class MarketServer
     nlohmann::json orderBookJson;
     {
       std::shared_lock lock(orderBook_mtx);
+
       orderBookJson = orderBook.isEmpty() ? nlohmann::json::array() : orderBook.toJson();
     }
     std::string orderBookString = orderBookJson.dump();
 
     zmq::message_t message(orderBookString.size());
+
     memcpy(message.data(), orderBookString.data(), orderBookString.size());
-    // spdlog::debug("[Server] Publishing order book update: {}", orderBookString);
+
     pubSocket.send(message, zmq::send_flags::none);
   }
 

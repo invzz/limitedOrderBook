@@ -10,17 +10,15 @@ class SimpleBot : public Bot
   }
 
   protected:
-  void run() override
+  void executeBot() override
   {
-    analyzeOrderBook();
-
     // generate a random price between 90 and 110
     std::uniform_real_distribution<double> priceDist(50.0, 150.0);
     double                                 price = priceDist(rng);
 
     // Generate a random order quantity between 1 and 10
-    std::uniform_int_distribution<int> quantityDist(1, 30);
-    int                                quantity = quantityDist(rng);
+    std::uniform_int_distribution<int> quantityDist(1, 2);
+    int                                quantity = 1;
 
     std::unique_ptr<Order> order = std::make_unique<Order>(type, price, quantity, getUserId());
     sendOrder(order->toJson());

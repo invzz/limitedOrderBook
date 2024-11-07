@@ -3,12 +3,10 @@
 
 int main()
 {
-  spdlog::set_level(spdlog::level::info);
+  spdlog::set_level(spdlog::level::debug);
   MarketServer server;
   server.start();
-  while(true) { 
-    
-  }
+  while(true) {}
   server.stop();
   return 0;
 }

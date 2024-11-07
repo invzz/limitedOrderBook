@@ -18,7 +18,7 @@ void OrderBook::addOrder(std::shared_ptr<Order> new_order)
 
   if(type == OrderType::BUY)
     {
-      std::unique_lock lock(mtx);
+      std::unique_lock lock(bids_mtx);
 
       // If there are no buy orders at this price, create a new PriceLevel
       if(bids.find(price) == bids.end()) { bids[price] = std::make_shared<PriceLevel>(price); }
@@ -26,7 +26,7 @@ void OrderBook::addOrder(std::shared_ptr<Order> new_order)
     }
   else if(type == OrderType::SELL)
     {
-      std::unique_lock lock(mtx);
+      std::unique_lock lock(asks_mtx);
 
       // If there are no sell orders at this price, create a new PriceLevel
       if(asks.find(price) == asks.end()) { asks[price] = std::make_shared<PriceLevel>(price); }
@@ -39,7 +39,8 @@ std::vector<std::shared_ptr<Trade>> OrderBook::match(int tick)
   std::vector<std::shared_ptr<Trade>> trades;
 
   // Acquire a unique lock for write operations on the order book
-  std::unique_lock lock(mtx);
+  std::unique_lock<std::shared_mutex> bidsLock(bids_mtx);
+  std::unique_lock<std::shared_mutex> asksLock(asks_mtx);
 
   // Iterate through all buy orders
   for(auto it_buy = bids.begin(); it_buy != bids.end();)
@@ -94,9 +95,9 @@ std::vector<std::shared_ptr<Trade>> OrderBook::match(int tick)
                   sellOrder->updateQuantity(-quantityTraded);
 
                   // Create the trade, passing the tick as an argument
-                  auto trade = std::make_shared<Trade>(tick,   // Pass the tick value here
-                                                       buyer,  // Buyer ID
-                                                       seller, // Seller ID
+                  auto trade = std::make_shared<Trade>(tick,                  // Pass the tick value here
+                                                       buyer,                 // Buyer ID
+                                                       seller,                // Seller ID
                                                        sellOrder->getPrice(), // Trade price
                                                        quantityTraded         // Trade quantity
                   );
@@ -137,7 +138,7 @@ std::vector<std::shared_ptr<Trade>> OrderBook::match(int tick)
           if(buyOrders.empty())
             {
               it_buy = bids.erase(it_buy); // Erase and get the next iterator
-              break; // Break out of the sell order loop since all buy orders are matched
+              break;                       // Break out of the sell order loop since all buy orders are matched
             }
         }
 
@@ -153,26 +154,20 @@ bool OrderBook::canMatch(double buy_price, double sell_price) { return buy_price
 
 std::vector<std::shared_ptr<Order>> OrderBook::getBestBid()
 {
-  std::unique_lock lock(mtx); // Lock for thread safety
-
+  std::shared_lock lock(bids_mtx);
   // Check if there are any buy orders
   if(bids.empty())
     {
       spdlog::warn("No buy orders available.");
       return {}; // Return empty vector if no buy orders
     }
-
-  // Get the highest price from the buy orders (best bid)
-
   // Return a copy of the orders at the best bid price level
-  return std::move(bids.rbegin()->second->getOrders());
+  return bids.rbegin()->second->getOrders(); // No need for std::move
 }
 
 std::vector<std::shared_ptr<Order>> OrderBook::getBestAsk()
 {
-  std::unique_lock lock(mtx); // Lock for thread safety
-
-  // Check if there are any sell orders
+  std::shared_lock lock(asks_mtx);
   if(asks.empty())
     {
       spdlog::warn("No sell orders available.");
@@ -180,15 +175,16 @@ std::vector<std::shared_ptr<Order>> OrderBook::getBestAsk()
     }
 
   // Get the lowest price from the sell orders (best ask)
-  auto bestAsk    = asks.begin(); // begin gives the iterator to the lowest key
-  auto PriceLevel = bestAsk->second;
+  auto bestAsk    = asks.begin();
+  auto priceLevel = bestAsk->second;
   // Return a copy of the orders at the best ask price level
-  return std::move(PriceLevel->getOrders());
+  return priceLevel->getOrders(); // No need for std::move
 }
 
 nlohmann::json OrderBook::toJson()
 {
-  std::shared_lock lock(mtx);
+  std::shared_lock lock(bids_mtx);
+  std::shared_lock lock2(asks_mtx);
   nlohmann::json   json;
   {
     // Serialize buy orders
@@ -210,9 +206,9 @@ nlohmann::json OrderBook::toJson()
   return json;
 }
 
-std::unique_ptr<OrderBook> OrderBook::fromJson(const nlohmann::json &orderBookData)
+std::shared_ptr<OrderBook> OrderBook::fromJson(const nlohmann::json &orderBookData)
 {
-  auto orderBook = std::make_unique<OrderBook>();
+  auto orderBook = std::make_shared<OrderBook>();
 
   // Deserialize buy orders
   for(const auto &buyLevelData : orderBookData["buy_orders"])

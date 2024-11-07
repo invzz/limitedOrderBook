@@ -31,14 +31,21 @@ class Bot
       }
   };
 
+  void analyzeOrderBook()
+  {
+    std::shared_lock<std::shared_mutex> lock(orderBookMutex);
+    executeBot();
+  }
+
   int         getUserId() const { return userId; }
   std::string getName() const { return name; }
 
   protected:
-  std::unique_ptr<OrderBook> orderBook;
+  std::shared_ptr<OrderBook> orderBook;
 
-  virtual void run() = 0; // Pure virtual function to be implemented by derived classes
-  void         sendOrder(const nlohmann::json &order)
+  virtual void executeBot() = 0;
+
+  void sendOrder(const nlohmann::json &order)
   {
     zmq::message_t orderMessage(order.dump().size());
     memcpy(orderMessage.data(), order.dump().data(), order.dump().size());
@@ -48,6 +55,7 @@ class Bot
 
   void processOrderBookUpdate(const std::string &update)
   {
+    std::unique_lock<std::shared_mutex> lock(orderBookMutex); // Exclusive write lock
     try
       {
         nlohmann::json orderBookUpdate = nlohmann::json::parse(update);
@@ -59,7 +67,11 @@ class Bot
             return;
           }
 
-        orderBook = OrderBook::fromJson(orderBookUpdate);
+        // Create a new OrderBook from JSON data
+        auto newOrderBook = OrderBook::fromJson(orderBookUpdate);
+
+        // Swap the new order book with the existing one safely
+        orderBook.swap(newOrderBook);
 
         spdlog::debug("[ {} ] Received order book update: {} ", name, orderBook->totalOrders());
       }
@@ -78,17 +90,18 @@ class Bot
           {
             std::string orderBookUpdate(static_cast<char *>(update.data()), update.size());
             processOrderBookUpdate(orderBookUpdate);
-            run(); // Run the bot logic after processing the order book update
+            analyzeOrderBook();
           }
       }
   }
 
   private:
-  zmq::context_t    context;
-  zmq::socket_t     orderSocket; // For sending orders to the server
-  zmq::socket_t     subscriberSocket;
-  std::string       name;
-  int               userId;
-  std::atomic<bool> running{true}; // Control running state
-  std::thread       botThread;     // Thread for the bot's execution
+  zmq::context_t            context;
+  zmq::socket_t             orderSocket; // For sending orders to the server
+  zmq::socket_t             subscriberSocket;
+  std::string               name;
+  int                       userId;
+  std::atomic<bool>         running{true};  // Control running state
+  std::thread               botThread;      // Thread for the bot's execution
+  mutable std::shared_mutex orderBookMutex; // Allows multiple readers, single writer
 };
