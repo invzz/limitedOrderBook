@@ -45,8 +45,8 @@ class Metrics
   const std::vector<std::shared_ptr<Trade>> &getSellTrades() const { return sellTrades; }
   double                                     getProfit() { return totalProfit; }
   int                                        getPosition() { return position; }
-  
-  void                                       updatePosition(int quantity) { position += quantity; }
+
+  void updatePosition(int quantity) { position += quantity; }
 
   bool isWithinLimit(int additionalUnits, int positionLimit) const
   {

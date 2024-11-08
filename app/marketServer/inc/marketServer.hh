@@ -46,8 +46,10 @@ class MarketServer
         running = false;
         pullSocket.close();
         pubSocket.close();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         if(listenerThread.joinable()) listenerThread.join();
       }
+    generateReport();
   }
 
   void tick()
@@ -76,17 +78,24 @@ class MarketServer
     while(running)
       {
         zmq::message_t message;
-        if(pullSocket.recv(message, zmq::recv_flags::none))
+        try
           {
-            std::string receivedMessage(static_cast<char *>(message.data()), message.size());
-            spdlog::debug("[Server] Received message: {} ", receivedMessage);
-            processMessage(receivedMessage);
+            if(pullSocket.recv(message, zmq::recv_flags::dontwait))
+              {
+                std::string receivedMessage(static_cast<char *>(message.data()), message.size());
+                spdlog::debug("[Server] Received message: {} ", receivedMessage);
+                processMessage(receivedMessage);
+              }
+            else { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
           }
-        else { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
+        catch(const zmq::error_t &e)
+          {
+            spdlog::error("[Server] Error receiving message: {}", e.what());
+          }
       }
   }
 
-  void createMetrics(int userId)
+  void createMetrics(std::string userId)
   {
     std::scoped_lock lock(metrics_mtx);
     if(metrics.find(userId) == metrics.end()) { metrics[userId] = std::make_unique<Metrics>(); }
@@ -94,7 +103,7 @@ class MarketServer
 
   void processMessage(const std::string &message)
   {
-    int POSITION_LIMIT = 20;
+    int POSITION_LIMIT = 2000;
     try
       {
         nlohmann::json parsed = nlohmann::json::parse(message);
@@ -103,7 +112,7 @@ class MarketServer
             auto newOrder = Order::fromJson(parsed);
             if(newOrder)
               {
-                int userId = newOrder->getUserId();
+                std::string userId = newOrder->getUserId();
                 createMetrics(userId);
 
                 // validate the order
@@ -119,8 +128,8 @@ class MarketServer
                     return;
                   }
 
-                // for seller bots, set the user id to a negative value
-                if(newOrder->getUserId() < 0) { POSITION_LIMIT = 300; }
+                // // for seller bots, set the user id to a negative value
+                // if(newOrder->getUserId() < 0) { POSITION_LIMIT = 30000; }
 
                 // check if the user is within the position limit
                 int  quantity = newOrder->getQuantity();
@@ -166,18 +175,51 @@ class MarketServer
     zmq::message_t message(orderBookString.size());
 
     memcpy(message.data(), orderBookString.data(), orderBookString.size());
-
-    pubSocket.send(message, zmq::send_flags::none);
+    try
+      {
+        pubSocket.send(message, zmq::send_flags::none);
+      }
+    catch(const zmq::error_t &e)
+      {
+        spdlog::error("[Server] Error publishing order book: {}", e.what());
+      }
   }
 
-  zmq::context_t                                    context;
-  zmq::socket_t                                     pullSocket;
-  zmq::socket_t                                     pubSocket;
-  std::atomic<bool>                                 running;
-  std::thread                                       listenerThread;
-  std::shared_mutex                                 metrics_mtx;
-  std::shared_mutex                                 orderBook_mtx;
-  std::atomic<int>                                  current_tick = 0;
-  std::unordered_map<int, std::unique_ptr<Metrics>> metrics;
-  OrderBook                                         orderBook;
+  void generateReport()
+  {
+    // Create a JSON object to hold the entire report
+    nlohmann::json report;
+
+    // Iterate over each bot's metrics
+    for(const auto &[userId, botMetrics] : metrics)
+      {
+        // Collect data for each bot
+        report["bots"][userId] = {
+          {"totalProfit", botMetrics->getProfit()           },
+          {"position",    botMetrics->getPosition()         },
+          {"buyTrades",   botMetrics->getBuyTrades().size() },
+          {"sellTrades",  botMetrics->getSellTrades().size()}
+          // ,
+          // {"buyTradesDetails",  getTradeDetails(botMetrics->getBuyTrades()) },
+          // {"sellTradesDetails", getTradeDetails(botMetrics->getSellTrades())}
+        };
+      }
+
+    // Optional: Add other market stats like total trades, average price, etc.
+    // report["marketOverview"] = generateMarketOverview();
+
+    // Log or print the generated report (pretty print with 4 spaces)
+    spdlog::info("[Server] Simulation Report: \n{}", report.dump(4)); // Pretty print JSON with indentation
+  }
+
+  zmq::context_t                                            context;
+  zmq::socket_t                                             pullSocket;
+  zmq::socket_t                                             pubSocket;
+  std::atomic<bool>                                         running;
+  std::thread                                               listenerThread;
+  std::shared_mutex                                         metrics_mtx;
+  std::shared_mutex                                         orderBook_mtx;
+  std::atomic<int>                                          current_tick = 0;
+  std::unordered_map<std::string, std::unique_ptr<Metrics>> metrics;
+  OrderBook                                                 orderBook;
 };

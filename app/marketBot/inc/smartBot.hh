@@ -1,11 +1,14 @@
+#include "abstractBot.hh"
+
 class SmartBot : public Bot
 {
   public:
-  SmartBot(const std::string &serverAddress, std::string name, int userId) : Bot(serverAddress, name, userId) { rng.seed(std::random_device()()); }
+  SmartBot(const std::string &serverAddress, std::string userId) : Bot(serverAddress, userId) { rng.seed(std::random_device()()); }
 
   protected:
   void executeBot() override
   {
+    if(!orderBook) { return; }
     auto bestAsk = orderBook->getBestAsk();
     auto bestBid = orderBook->getBestBid();
 
@@ -56,6 +59,8 @@ class SmartBot : public Bot
             placeOrder(OrderType::SELL, targetSellPrice, targetQuantity);
           }
       }
+
+    for(auto &order : orders) { sendOrder(order->toJson()); }
   }
 
   private:
@@ -94,9 +99,5 @@ class SmartBot : public Bot
 
   void placeOrder(OrderType type, double price, int quantity) { orders.push_back(std::make_unique<Order>(type, price, quantity, getUserId())); }
 
-  int generateRandomQuantity()
-  {
-    std::uniform_int_distribution<int> quantityDist(1, 10);
-    return quantityDist(rng);
-  }
+
 };

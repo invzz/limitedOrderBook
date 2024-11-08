@@ -8,23 +8,18 @@
 class Order
 {
   private:
-  OrderType type;
-  double    price;
-  int       quantity;
-  int       userId;
-  int       id;
+  OrderType   type;
+  double      price;
+  int         quantity;
+  std::string userId;
+  int         id;
 
   public:
   // Constructor
-  Order(OrderType t, double p, int q, int uId) : type(t), price(p), quantity(q), userId(uId)
-  {
-    id = 0;
-  }
+  Order(OrderType t, double p, int q, std::string uId) : type(t), price(p), quantity(q), userId(uId) { id = 0; }
 
   // Constructor
-  Order(OrderType t, double p, int q, int uId, int i)
-      : type(t), price(p), quantity(q), userId(uId), id(i)
-  {}
+  Order(OrderType t, double p, int q, std::string uId, int i) : type(t), price(p), quantity(q), userId(uId), id(i) {}
 
   // Convert to JSON
   nlohmann::json toJson() const
@@ -41,11 +36,11 @@ class Order
   // Create an Order from JSON (now returning shared_ptr)
   static std::shared_ptr<Order> fromJson(const nlohmann::json &orderData)
   {
-    int       id       = orderData["id"];
-    OrderType type     = (orderData["type"] == "BUY") ? OrderType::BUY : OrderType::SELL;
-    double    price    = orderData["price"];
-    int       quantity = orderData["quantity"];
-    int       userId   = orderData["userId"];
+    int         id       = orderData["id"];
+    OrderType   type     = (orderData["type"] == "BUY") ? OrderType::BUY : OrderType::SELL;
+    double      price    = orderData["price"];
+    int         quantity = orderData["quantity"];
+    std::string userId   = orderData["userId"];
 
     auto order = std::make_shared<Order>(type, price, quantity, userId);
     order->setId(id); // Set the ID
@@ -53,11 +48,11 @@ class Order
   }
 
   // Getters
-  int       getId() const { return id; }
-  OrderType getType() const { return type; }
-  double    getPrice() const { return price; }
-  int       getQuantity() const { return quantity; }
-  int       getUserId() const { return userId; }
+  int         getId() const { return id; }
+  OrderType   getType() const { return type; }
+  double      getPrice() const { return price; }
+  int         getQuantity() const { return quantity; }
+  std::string getUserId() const { return userId; }
 
   // Setters
   void setId(int newId) { id = newId; }

@@ -6,13 +6,10 @@
 #include <map>
 #include <shared_mutex>
 #include <nlohmann/json.hpp>
-#include "metrics.hh"
-
+#include <trade.hh>
 class OrderBook
 {
   public:
- 
-
   void                                addOrder(std::shared_ptr<Order> new_order); // Change to shared_ptr
   std::vector<std::shared_ptr<Trade>> match(int tick = 0);
   int                                 getNextOrderId() { return next_order_id++; }

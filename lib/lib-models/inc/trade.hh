@@ -7,21 +7,21 @@
 class Trade
 {
   public:
-  Trade(int tick, int buyerId, int sellerId, double price, int quantity)
+  Trade(int tick, std::string buyerId, std::string sellerId, double price, int quantity)
       : tick(tick), buyerId(buyerId), sellerId(sellerId), price(price), quantity(quantity)
   {}
-  int    getTick() const { return tick; }
-  int    getBuyerId() const { return buyerId; }
-  int    getSellerId() const { return sellerId; }
-  double getPrice() const { return price; }
-  int    getQuantity() const { return quantity; }
+  int         getTick() const { return tick; }
+  std::string getBuyerId() const { return buyerId; }
+  std::string getSellerId() const { return sellerId; }
+  double      getPrice() const { return price; }
+  int         getQuantity() const { return quantity; }
 
   private:
-  int    tick;
-  int    buyerId;
-  int    sellerId;
-  double price;
-  int    quantity;
+  int         tick;
+  std::string buyerId;
+  std::string sellerId;
+  double      price;
+  int         quantity;
 };
 
 #endif // TRADE_HH

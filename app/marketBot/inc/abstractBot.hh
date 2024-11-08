@@ -10,8 +10,7 @@
 class Bot
 {
   public:
-  Bot(const std::string &serverAddress, std::string name, int userId)
-      : context(1), orderSocket(context, ZMQ_PUSH), subscriberSocket(context, ZMQ_SUB), name(name), userId(userId)
+  Bot(const std::string &serverAddress, std::string &userId) : context(1), orderSocket(context, ZMQ_PUSH), subscriberSocket(context, ZMQ_SUB), userId(userId)
   {
     orderSocket.connect(serverAddress + ":5555");      // Connect to the order receiving socket
     subscriberSocket.connect(serverAddress + ":5556"); // Connect to the order book updates
@@ -19,7 +18,7 @@ class Bot
   }
   void start()
   {
-    spdlog::info("Starting Bot {}", name);
+    spdlog::info("Starting Bot {}", userId);
     botThread = std::thread(&Bot::listenForUpdates, this);
   }
   void stop()
@@ -37,8 +36,7 @@ class Bot
     executeBot();
   }
 
-  int         getUserId() const { return userId; }
-  std::string getName() const { return name; }
+  std::string getUserId() const { return userId; }
 
   protected:
   std::shared_ptr<OrderBook> orderBook;
@@ -50,7 +48,7 @@ class Bot
     zmq::message_t orderMessage(order.dump().size());
     memcpy(orderMessage.data(), order.dump().data(), order.dump().size());
     orderSocket.send(orderMessage, zmq::send_flags::none);
-    spdlog::info("[ {} ] Sent order:\n{}", name, order.dump(4));
+    spdlog::info("[ {} ] Sent order:\n{}", userId, order.dump(4));
   }
 
   void processOrderBookUpdate(const std::string &update)
@@ -63,7 +61,7 @@ class Bot
         // check if the order book is empty
         if(orderBookUpdate.empty())
           {
-            spdlog::warn("[ {} ] Received empty order book update", name);
+            spdlog::warn("[ {} ] Received empty order book update", userId);
             return;
           }
 
@@ -73,11 +71,11 @@ class Bot
         // Swap the new order book with the existing one safely
         orderBook.swap(newOrderBook);
 
-        spdlog::debug("[ {} ] Received order book update: {} ", name, orderBook->totalOrders());
+        spdlog::debug("[ {} ] Received order book update: {} ", userId, orderBook->totalOrders());
       }
     catch(const nlohmann::json::exception &e)
       {
-        spdlog::error("[ {} ] Failed to process order book update: {} - {}", name, e.what(), update);
+        spdlog::error("[ {} ] Failed to process order book update: {} - {}", userId, e.what(), update);
       }
   }
 
@@ -99,8 +97,7 @@ class Bot
   zmq::context_t            context;
   zmq::socket_t             orderSocket; // For sending orders to the server
   zmq::socket_t             subscriberSocket;
-  std::string               name;
-  int                       userId;
+  std::string               userId;
   std::atomic<bool>         running{true};  // Control running state
   std::thread               botThread;      // Thread for the bot's execution
   mutable std::shared_mutex orderBookMutex; // Allows multiple readers, single writer
