@@ -29,8 +29,8 @@ class MarketServer
 
   void start()
   {
-    spdlog::info("[Server] Starting Market Server");
     running        = true;
+    
     listenerThread = std::thread(&MarketServer::listenForMessages, this);
 
     while(running)
@@ -38,15 +38,14 @@ class MarketServer
         current_tick++;
 
         auto trades = orderBook.match(current_tick.load());
-        if(!orderBook.isEmpty()) { lastAvgPrice = orderBook.getAvgPrice(); }
 
-        auto format = "[ {} ] [ {:2} --> {:2} ] [ {:2} * {:>3.2f} ]";
+        if(!orderBook.isEmpty()) { lastAvgPrice = orderBook.getAvgPrice(); }
 
         for(auto &trade : trades)
           {
             if(running)
               {
-                spdlog::info(format, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice());
+                spdlog::info(TRADE_FORMAT, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice());
                 metrics[trade->getBuyerId()]->addBuyTrade(trade);
                 metrics[trade->getSellerId()]->addSellTrade(trade);
               }
@@ -106,7 +105,9 @@ class MarketServer
   void processMessage(const std::string &message)
   {
     if(!running) { return; }
-    int POSITION_LIMIT = 2000;
+    
+    int POSITION_LIMIT = 200;
+   
     try
       {
         nlohmann::json parsed = nlohmann::json::parse(message);
@@ -235,6 +236,8 @@ class MarketServer
     // Log or print the generated report (pretty print with 4 spaces)
     spdlog::info("[Server] Simulation Report: \n{}", report.dump(4)); // Pretty print JSON with indentation
   }
+
+  const std::string TRADE_FORMAT = "[ {} ] [ {:2} --> {:2} ] [ {:2} * {:>3.2f} ]";
 
   zmq::context_t                                            context;
   zmq::socket_t                                             pullSocket;
