@@ -11,7 +11,7 @@ class SimpleBot : public Bot
   void executeBot() override
   {
     // generate a random price between 90 and 110
-    std::uniform_real_distribution<double> priceDist(50.0, 150.0);
+    std::uniform_real_distribution<double> priceDist(90.0, 110.0);
     double                                 price = priceDist(rng);
 
     // Generate a random order quantity between 1 and 10

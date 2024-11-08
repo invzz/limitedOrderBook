@@ -1,19 +1,28 @@
 #include "marketServer.hh"
 #include <spdlog/spdlog.h>
+#include <cxxopts.hpp>
 
-int main()
+int main(int argc, char *argv[])
 {
+  cxxopts::Options options("yams", "Yet Another Market Simulator");
+
+  options.add_options()("s,integer", "number of seconds", cxxopts::value<int>());
+
+  auto result = options.parse(argc, argv);
+
+  auto seconds = result["s"].as<int>();
+
   // Create the market server
   MarketServer server;
 
   // Start the server in a separate thread
   std::thread serverThread([&server]() { server.start(); });
 
-  // Simulate running the server for a certain period, for example 10 seconds
-  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::this_thread::sleep_for(std::chrono::seconds(seconds));
 
   // Stop the server
   std::cout << "*** [ main ] Stopping server..." << std::endl;
+
   server.stop();
 
   // Join the server thread to make sure it shuts down properly

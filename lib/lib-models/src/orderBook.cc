@@ -181,6 +181,14 @@ std::vector<std::shared_ptr<Order>> OrderBook::getBestAsk()
   return priceLevel->getOrders(); // No need for std::move
 }
 
+double OrderBook::getAvgPrice()
+{
+  std::shared_lock lock(bids_mtx);
+  std::shared_lock lock2(asks_mtx);
+  if(bids.empty() || asks.empty()) { return 0.0; }
+  return (bids.rbegin()->first + asks.begin()->first) / 2.0;
+}
+
 nlohmann::json OrderBook::toJson()
 {
   std::shared_lock lock(bids_mtx);

@@ -32,10 +32,27 @@ class MarketServer
     spdlog::info("[Server] Starting Market Server");
     running        = true;
     listenerThread = std::thread(&MarketServer::listenForMessages, this);
+
     while(running)
       {
-        tick();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        current_tick++;
+
+        auto trades = orderBook.match(current_tick.load());
+        if(!orderBook.isEmpty()) { lastAvgPrice = orderBook.getAvgPrice(); }
+
+        auto format = "[ {} ] [ {:2} --> {:2} ] [ {:2} * {:>3.2f} ]";
+
+        for(auto &trade : trades)
+          {
+            if(running)
+              {
+                spdlog::info(format, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice());
+                metrics[trade->getBuyerId()]->addBuyTrade(trade);
+                metrics[trade->getSellerId()]->addSellTrade(trade);
+              }
+          }
+
+        publishOrderBook();
       }
   }
 
@@ -48,27 +65,12 @@ class MarketServer
         pubSocket.close();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         if(listenerThread.joinable()) listenerThread.join();
+        liquidatePositions();
+        generateReport();
       }
-    generateReport();
   }
 
-  void tick()
-  {
-    current_tick++;
-
-    auto trades = orderBook.match(current_tick.load());
-
-    auto format = "[ {} ] [ {:2} --> {:2} ] [ {:2} * {:>3.2f} ]";
-
-    for(auto &trade : trades)
-      {
-        spdlog::info(format, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice());
-        metrics[trade->getBuyerId()]->addBuyTrade(trade);
-        metrics[trade->getSellerId()]->addSellTrade(trade);
-      }
-
-    publishOrderBook();
-  }
+  void tick() {}
 
   private:
   void listenForMessages()
@@ -103,6 +105,7 @@ class MarketServer
 
   void processMessage(const std::string &message)
   {
+    if(!running) { return; }
     int POSITION_LIMIT = 2000;
     try
       {
@@ -118,13 +121,13 @@ class MarketServer
                 // validate the order
                 if(newOrder->getQuantity() <= 0)
                   {
-                    spdlog::warn("[Server] Order rejected: quantity {} cannot be negative.", newOrder->getPrice(), newOrder->getQuantity());
+                    spdlog::debug("[Server] Order rejected: quantity {} cannot be negative.", newOrder->getPrice(), newOrder->getQuantity());
                     return;
                   }
 
                 if(newOrder->getPrice() <= 0)
                   {
-                    spdlog::warn("[Server] Order rejected: price {} cannot be negative.", newOrder->getPrice(), newOrder->getQuantity());
+                    spdlog::debug("[Server] Order rejected: price {} cannot be negative.", newOrder->getPrice(), newOrder->getQuantity());
                     return;
                   }
 
@@ -142,7 +145,7 @@ class MarketServer
                   std::shared_lock lock(metrics_mtx);
                   if(!metrics[userId]->isWithinLimit(qtyCheck, POSITION_LIMIT))
                     {
-                      spdlog::warn("[Server] Order rejected: User {} exceeds position limit with quantity {}", userId, quantity);
+                      spdlog::debug("[Server] Order rejected: User {} exceeds position limit with quantity {}", userId, quantity);
                       return;
                     }
                 }
@@ -164,6 +167,7 @@ class MarketServer
 
   void publishOrderBook()
   {
+    if(!running) { return; }
     nlohmann::json orderBookJson;
     {
       std::shared_lock lock(orderBook_mtx);
@@ -182,6 +186,26 @@ class MarketServer
     catch(const zmq::error_t &e)
       {
         spdlog::error("[Server] Error publishing order book: {}", e.what());
+      }
+  }
+
+  void liquidatePositions()
+  {
+    std::scoped_lock lock(metrics_mtx);
+
+    // get the avg price from the order book
+    {
+      std::shared_lock lock(orderBook_mtx);
+      auto             bestBid = orderBook.getBestBid();
+      auto             bestAsk = orderBook.getBestAsk();
+    }
+
+    // for each metric, liquidate the position
+    for(const auto &[userId, botMetrics] : metrics)
+      {
+        int position = botMetrics->getPosition();
+        spdlog::info("[Server] Liquidating position {} for user: {} , adding {} to : {} ", position, userId, position * lastAvgPrice, botMetrics->getProfit());
+        botMetrics->updateProfit(position * lastAvgPrice);
       }
   }
 
@@ -222,4 +246,5 @@ class MarketServer
   std::atomic<int>                                          current_tick = 0;
   std::unordered_map<std::string, std::unique_ptr<Metrics>> metrics;
   OrderBook                                                 orderBook;
+  double                                                    lastAvgPrice = 0.0;
 };

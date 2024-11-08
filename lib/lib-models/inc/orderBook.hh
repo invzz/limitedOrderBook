@@ -17,6 +17,7 @@ class OrderBook
   nlohmann::json                      toJson();
   std::vector<std::shared_ptr<Order>> getBestBid(); // Change to shared_ptr
   std::vector<std::shared_ptr<Order>> getBestAsk(); // Change to shared_ptr
+  double getAvgPrice(); // Change to shared_ptr
 
   static std::shared_ptr<OrderBook> fromJson(const nlohmann::json &orderBookData);
 

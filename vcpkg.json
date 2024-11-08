@@ -1,5 +1,10 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "dependencies": [ "gtest", "spdlog",  "cppzmq","nlohmann-json"
-]
+    "dependencies": [
+        "gtest",
+        "spdlog",
+        "cppzmq",
+        "nlohmann-json",
+        "cxxopts"
+    ]
 }

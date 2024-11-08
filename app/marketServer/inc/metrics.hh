@@ -13,13 +13,13 @@
 class Metrics
 {
   public:
-  Metrics() : totalProfit(0.0), position(0) {}
+  Metrics() : profit(0.0), position(0) {}
 
   void addBuyTrade(const std::shared_ptr<Trade> &trade)
   {
     std::scoped_lock<std::shared_mutex> lock(buyTradesMtx);
     buyTrades.push_back(trade);
-    totalProfit -= trade->getPrice() * trade->getQuantity();
+    profit -= trade->getPrice() * trade->getQuantity();
     position += trade->getQuantity();
   }
 
@@ -27,7 +27,7 @@ class Metrics
   {
     std::scoped_lock<std::shared_mutex> lock(sellTradesMtx);
     sellTrades.push_back(trade);
-    totalProfit += trade->getPrice() * trade->getQuantity();
+    profit += trade->getPrice() * trade->getQuantity();
     position -= trade->getQuantity();
   }
 
@@ -37,16 +37,18 @@ class Metrics
     ss << "buy    :: " << buyTrades.size() << SEPARATOR;
     ss << "sell   :: " << sellTrades.size() << SEPARATOR;
     ss << "position :: " << position << SEPARATOR;
-    ss << "profit :: " << totalProfit;
+    ss << "profit :: " << profit;
     return ss.str();
   }
 
   const std::vector<std::shared_ptr<Trade>> &getBuyTrades() const { return buyTrades; }
   const std::vector<std::shared_ptr<Trade>> &getSellTrades() const { return sellTrades; }
-  double                                     getProfit() { return totalProfit; }
+  double                                     getProfit() { return profit; }
   int                                        getPosition() { return position; }
 
   void updatePosition(int quantity) { position += quantity; }
+
+  void updateProfit(double profit) { this->profit += profit; }
 
   bool isWithinLimit(int additionalUnits, int positionLimit) const
   {
@@ -56,7 +58,7 @@ class Metrics
   private:
   mutable std::shared_mutex           buyTradesMtx;
   mutable std::shared_mutex           sellTradesMtx;
-  double                              totalProfit;
+  double                              profit;
   int                                 position;
   std::vector<std::shared_ptr<Trade>> buyTrades;
   std::vector<std::shared_ptr<Trade>> sellTrades;
