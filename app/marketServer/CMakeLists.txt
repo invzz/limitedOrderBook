@@ -14,5 +14,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE cxxopts::cxxopts cppzmq-static lib
 target_include_directories(${PROJECT_NAME} PUBLIC 
 ${CMAKE_CURRENT_SOURCE_DIR}/inc 
 ${CMAKE_CURRENT_SOURCE_DIR}/inc/commands 
-${CMAKE_CURRENT_SOURCE_DIR}/inc/controller
+${CMAKE_CURRENT_SOURCE_DIR}/inc/controllers
 )

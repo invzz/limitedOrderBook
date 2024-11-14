@@ -7,6 +7,7 @@
 #include <mutex>
 #include <sstream>
 #include "trade.hh"
+#include <nlohmann/json.hpp>
 
 #define SEPARATOR " - "
 
@@ -15,13 +16,7 @@ class Metrics
   public:
   Metrics() : profit(0.0), position(0) {}
 
-  nlohmann::json toJson() const
-  {
-    return nlohmann::json{
-      {"profit", profit  },
-      {"userId", position}
-    };
-  }
+ 
 
   void addBuyTrade(const std::shared_ptr<Trade> &trade)
   {
@@ -47,6 +42,30 @@ class Metrics
     ss << "position :: " << position << SEPARATOR;
     ss << "profit :: " << profit;
     return ss.str();
+  }
+
+  nlohmann::json toJson() const
+  {
+    nlohmann::json j;
+    {
+      std::scoped_lock<std::shared_mutex> lock(buyTradesMtx);
+      j["buyTrades"] = nlohmann::json::array();
+      for (const auto &trade : buyTrades)
+      {
+        j["buyTrades"].push_back(trade->toJson());
+      }
+    }
+    {
+      std::scoped_lock<std::shared_mutex> lock(sellTradesMtx);
+      j["sellTrades"] = nlohmann::json::array();
+      for (const auto &trade : sellTrades)
+      {
+        j["sellTrades"].push_back(trade->toJson());
+      }
+    }
+    j["profit"] = profit;
+    j["position"] = position;
+    return j;
   }
 
   const std::vector<std::shared_ptr<Trade>> &getBuyTrades() const { return buyTrades; }

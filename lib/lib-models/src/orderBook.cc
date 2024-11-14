@@ -158,7 +158,7 @@ std::vector<std::shared_ptr<Order>> OrderBook::getBestBid()
   // Check if there are any buy orders
   if(bids.empty())
     {
-      spdlog::warn("No buy orders available.");
+      spdlog::debug("No buy orders available.");
       return {}; // Return empty vector if no buy orders
     }
   // Return a copy of the orders at the best bid price level
@@ -170,7 +170,7 @@ std::vector<std::shared_ptr<Order>> OrderBook::getBestAsk()
   std::shared_lock lock(asks_mtx);
   if(asks.empty())
     {
-      spdlog::warn("No sell orders available.");
+      spdlog::debug("No sell orders available.");
       return {}; // Return empty vector if no sell orders
     }
 

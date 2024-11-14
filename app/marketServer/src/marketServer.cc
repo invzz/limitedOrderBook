@@ -27,25 +27,27 @@ void MarketServer::start()
         {
           if(running)
             {
-              spdlog::info(TRADE_FORMAT, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice());
+              spdlog::debug(TRADE_FORMAT, trade->getTick(), trade->getSellerId(), trade->getBuyerId(), trade->getQuantity(), trade->getPrice());
               metrics[trade->getBuyerId()]->addBuyTrade(trade);
               metrics[trade->getSellerId()]->addSellTrade(trade);
             }
         }
       publishOrderBook();
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      // std::this_thread::sleep_for(std::chrono::milliseconds());
     }
 }
 
 void MarketServer::stop()
 {
-  if(running)
+  while(running) { running = false; }
+
+  if(!running)
     {
-      running = false;
+      // if(OrderListenerThread.joinable()) OrderListenerThread.join();
+      if(CommandListenerThread.joinable()) { CommandListenerThread.join(); }
       pubSocket.close();
       routerSocket.close();
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      if(OrderListenerThread.joinable()) OrderListenerThread.join();
+      context.shutdown();
       liquidatePositions();
       generateReport();
     }
@@ -86,6 +88,7 @@ void MarketServer::generateReport()
 void MarketServer::ListenForCommands()
 {
   zmq::message_t request;
+
   while(running)
     {
       if(routerSocket.recv(request, zmq::recv_flags::none) && routerSocket.recv(request, zmq::recv_flags::none))
@@ -104,6 +107,11 @@ void MarketServer::ListenForCommands()
 
           if(command == "STOP") break;
         }
+    }
+  if(!running)
+    {
+      spdlog::info("[Server] Stopping command listener thread.");
+      return;
     }
 }
 
@@ -127,13 +135,13 @@ void MarketServer::PutOrder(const std::string &message)
               // validate the order
               if(quantity <= 0)
                 {
-                  spdlog::debug("[Server] Order rejected: quantity {} cannot be negative.", newOrder->getPrice(), quantity);
+                  spdlog::debug("[ rejected ] {} : => quantity {} cannot be negative.", newOrder->getPrice(), quantity);
                   return;
                 }
 
               if(quantity <= 0)
                 {
-                  spdlog::debug("[Server] Order rejected: price {} cannot be negative.", newOrder->getPrice(), quantity);
+                  spdlog::debug("[ rejected ] {} : => price {} cannot be negative.", newOrder->getPrice(), quantity);
                   return;
                 }
 
@@ -153,7 +161,7 @@ void MarketServer::PutOrder(const std::string &message)
                 std::unique_lock lock(metrics_mtx);
                 if(!metrics[userId]->isWithinLimit(qtyCheck, POSITION_LIMIT))
                   {
-                    spdlog::debug("[Server] Order rejected: User {} exceeds position limit with quantity {}", userId, quantity);
+                    spdlog::debug("[ rejected ] {} : => exceeds limits. ", userId);
                     return;
                   }
               }
@@ -164,7 +172,7 @@ void MarketServer::PutOrder(const std::string &message)
               }
             }
         }
-      else { spdlog::warn(" {} Unknown message type: {}", current_tick.load(), message); }
+      else { spdlog::debug(" {} Unknown message type: {}", current_tick.load(), message); }
     }
   catch(const nlohmann::json::exception &e)
     {
@@ -203,7 +211,7 @@ void MarketServer::GetMetrics(const std::string &userId)
   std::string user_metrics = metrics[userId]->toJson().dump();
 
   zmq::message_t body(user_metrics.size());
-  
+
   std::memcpy(body.data(), user_metrics.data(), user_metrics.size());
 
   std::memcpy(message.data(), userId.data(), userId.size());
@@ -212,5 +220,5 @@ void MarketServer::GetMetrics(const std::string &userId)
   routerSocket.send(zmq::message_t(), zmq::send_flags::sndmore);
   routerSocket.send(body, zmq::send_flags::none);
   // routerSocket.send(body, zmq::send_flags::none);
-  spdlog::info("[ Metrics ] @ client: {}", userId);
+  spdlog::debug("[ Metrics ] @ client: {}", userId);
 }

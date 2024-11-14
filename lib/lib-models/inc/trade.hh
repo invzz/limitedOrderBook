@@ -16,6 +16,17 @@ class Trade
   double      getPrice() const { return price; }
   int         getQuantity() const { return quantity; }
 
+  nlohmann::json toJson() const
+  {
+    return nlohmann::json{
+      {"tick",     tick    },
+      {"buyerId",  buyerId },
+      {"sellerId", sellerId},
+      {"price",    price   },
+      {"quantity", quantity}
+    };
+  }
+
   private:
   int         tick;
   std::string buyerId;

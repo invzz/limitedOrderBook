@@ -14,7 +14,7 @@
 
 # Precompiled Headers
 *.gch
-*.pch
+*.pchgit add 
 
 # Libraries
 *.lib

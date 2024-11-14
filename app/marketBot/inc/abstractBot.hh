@@ -60,8 +60,8 @@ class Bot
   {
     std::string    message = "PUT_ORDER " + userId + " " + order.dump();
     zmq::message_t request(message.c_str(), message.size());
-    dealerSocket.send(request, zmq::send_flags::none);
-    spdlog::info("[ {} ] Sent order:\n{}", userId, order.dump(4));
+    dealerSocket.send(request, zmq::send_flags::dontwait);
+    spdlog::debug("[ {} ] Sent order:\n{}", userId, order.dump(4));
     getMetrics();
   }
 
@@ -69,8 +69,8 @@ class Bot
   {
     std::string    message = "GET_METRICS " + userId;
     zmq::message_t request(message.c_str(), message.size());
-    dealerSocket.send(request, zmq::send_flags::none);
-    spdlog::info("[ {} ] Requested metrics", userId);
+    dealerSocket.send(request, zmq::send_flags::dontwait);
+    spdlog::debug("[ {} ] Requested metrics", userId);
     listenForMetrics();
   }
 
@@ -82,7 +82,7 @@ class Bot
 
         if(orderBookUpdate.is_array() && orderBookUpdate.empty())
           {
-            spdlog::warn("[ {} ] order book is empty", userId);
+            spdlog::debug("[ {} ] order book is empty", userId);
             orderBook = std::make_unique<OrderBook>();
           }
         else
@@ -102,7 +102,7 @@ class Bot
     try
       {
         nlohmann::json metricsUpdate = nlohmann::json::parse(update);
-        spdlog::info("[ {} ] Received metrics update {}", userId, metricsUpdate.dump(4));
+        spdlog::debug("[ {} ] Received metrics update {}", userId, metricsUpdate.dump(4));
       }
     catch(const nlohmann::json::exception &e)
       {
@@ -125,11 +125,11 @@ class Bot
     zmq::message_t message;
 
     // First frame: the identity (user ID), which you can ignore if not needed
-    if(dealerSocket.recv(identity, zmq::recv_flags::none))
+    if(dealerSocket.recv(identity, zmq::recv_flags::dontwait))
       {
         spdlog::debug("[{}] Received identity", userId);
         // Second frame: the actual message content
-        if(dealerSocket.recv(message, zmq::recv_flags::none))
+        if(dealerSocket.recv(message, zmq::recv_flags::dontwait))
           {
             std::string receivedMessage(static_cast<char *>(message.data()), message.size());
 
@@ -148,7 +148,7 @@ class Bot
         zmq::message_t topic;
         zmq::message_t message;
         {
-          if(subSocket.recv(topic, zmq::recv_flags::dontwait) && subSocket.recv(message, zmq::recv_flags::none))
+          if(subSocket.recv(topic, zmq::recv_flags::dontwait) && subSocket.recv(message, zmq::recv_flags::dontwait))
             {
               std::string receivedMessage(static_cast<char *>(message.data()), message.size());
               spdlog::debug("[ {} ] Received message: {}", userId, receivedMessage);
