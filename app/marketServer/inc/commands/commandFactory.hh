@@ -11,19 +11,19 @@ class CommandFactory
   {
     if(command == GET_METRICS)
       {
-        spdlog::info("[Server] Creating GetMetricsCommand");
+        spdlog::debug("[Server] Creating GetMetricsCommand");
         return std::make_unique<GetMetricsCommand>(server, userId);
       }
 
     else if(command == "PUT_ORDER")
       {
-        spdlog::info("[Server] Creating PutOrderCommand");
+        spdlog::debug("[Server] Creating PutOrderCommand");
         return std::make_unique<PutOrderCommand>(server);
       }
 
     else if(command == "STOP")
       {
-        spdlog::info("[Server] Creating StopCommand");
+        spdlog::debug("[Server] Creating StopCommand");
         return std::make_unique<StopCommand>(server);
       }
 

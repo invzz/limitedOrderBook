@@ -15,12 +15,13 @@
 class Bot
 {
   public:
-  Bot(const std::string &serverAddress, std::string userId) : context(1), subSocket(context, ZMQ_SUB), dealerSocket(context, ZMQ_DEALER), userId(userId)
+  Bot(const std::string &serverAddress, std::string userId)
+      : context(1), subSocket(context, zmq::socket_type::sub), dealerSocket(context, zmq::socket_type::dealer), userId(userId)
   {
     subSocket.connect(PULL_ADDRESS);
     subSocket.set(zmq::sockopt::subscribe, BOOK_TOPIC);
-    dealerSocket.connect(ROUTER_ADDRESS);
     dealerSocket.set(zmq::sockopt::routing_id, userId);
+    dealerSocket.connect(ROUTER_ADDRESS);
   }
 
   virtual ~Bot() { stop(); }
@@ -28,9 +29,8 @@ class Bot
   void start()
   {
     spdlog::info("Starting Bot {}", userId);
-    running = true;
-    // subThread    = std::thread(&Bot::listenForOrderBookSub, this);
-    dealerThread = std::thread(&Bot::listenForMetrics, this);
+    running   = true;
+    subThread = std::thread(&Bot::listenForOrderBookSub, this);
   }
 
   void stop()
@@ -71,6 +71,7 @@ class Bot
     zmq::message_t request(message.c_str(), message.size());
     dealerSocket.send(request, zmq::send_flags::none);
     spdlog::info("[ {} ] Requested metrics", userId);
+    listenForMetrics();
   }
 
   void updateOrderBook(const std::string &update)
@@ -81,12 +82,12 @@ class Bot
 
         if(orderBookUpdate.is_array() && orderBookUpdate.empty())
           {
-            spdlog::info("[ {} ] Received empty order book update", userId);
+            spdlog::warn("[ {} ] order book is empty", userId);
             orderBook = std::make_unique<OrderBook>();
           }
         else
           {
-            spdlog::info("[ {} ] Received order book update! ", userId);
+            spdlog::debug("[ {} ] Received order book update! ", userId);
             orderBook = OrderBook::fromJson(orderBookUpdate);
           }
       }
@@ -101,7 +102,7 @@ class Bot
     try
       {
         nlohmann::json metricsUpdate = nlohmann::json::parse(update);
-        spdlog::info("[ {} ] Received metrics update!", userId);
+        spdlog::info("[ {} ] Received metrics update {}", userId, metricsUpdate.dump(4));
       }
     catch(const nlohmann::json::exception &e)
       {
@@ -120,19 +121,23 @@ class Bot
 
   void listenForMetrics()
   {
-    while(running)
+    zmq::message_t identity;
+    zmq::message_t message;
+
+    // First frame: the identity (user ID), which you can ignore if not needed
+    if(dealerSocket.recv(identity, zmq::recv_flags::none))
       {
-        zmq::message_t message;
-        {
-          getMetrics();
-          if(dealerSocket.recv(message, zmq::recv_flags::dontwait) && dealerSocket.recv(message, zmq::recv_flags::none))
-            {
-              std::string receivedMessage(static_cast<char *>(message.data()), message.size());
-              spdlog::debug("[ {} ] Received metrics: {}", userId, receivedMessage);
-              updateMetrics(receivedMessage);
-            }
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        spdlog::debug("[{}] Received identity", userId);
+        // Second frame: the actual message content
+        if(dealerSocket.recv(message, zmq::recv_flags::none))
+          {
+            std::string receivedMessage(static_cast<char *>(message.data()), message.size());
+
+            spdlog::debug("[{}] Received metrics: {}", userId, receivedMessage);
+
+            // Process the metrics update
+            updateMetrics(receivedMessage);
+          }
       }
   }
 

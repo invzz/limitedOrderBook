@@ -2,9 +2,10 @@
 #include "commands/commandFactory.hh"
 #include <chrono>
 
-MarketServer::MarketServer() : running(false), context(1), pubSocket(context, ZMQ_PUB), routerSocket(context, ZMQ_ROUTER)
+MarketServer::MarketServer() : running(false), context(1), pubSocket(context, zmq::socket_type::pub), routerSocket(context, zmq::socket_type::router)
 {
-  pubSocket.bind(PUB_ADDRESS);       // 5555
+  pubSocket.bind(PUB_ADDRESS); // 5555
+  routerSocket.set(zmq::sockopt::router_mandatory, true);
   routerSocket.bind(ROUTER_ADDRESS); // 5557
 }
 
@@ -192,25 +193,24 @@ void MarketServer::publishOrderBook()
   auto totalsize = orderBook.getBestAsk().size() + orderBook.getBestBid().size();
   auto avgPrice  = orderBook.getAvgPrice();
 
-  spdlog::info("[Server] Published order book of {} elements. with avgPrice {}", totalsize, avgPrice);
+  spdlog::debug("[Server] Published order book of {} elements. with avgPrice {}", totalsize, avgPrice);
 }
 
 void MarketServer::GetMetrics(const std::string &userId)
 {
-  {
-    std::string metricsString;
-    {
-      std::unique_lock lock(metrics_mtx);
-      if(metrics[userId] == nullptr) metrics[userId] = std::make_unique<Metrics>();
-      metricsString = metrics[userId]->toJson().dump();
-    }
-    zmq::message_t client(userId.data(), userId.size());
-    zmq::message_t message(metricsString.size());
-    
-    memcpy(message.data(), metricsString.data(), metricsString.size());
-    
-    routerSocket.send(client, zmq::send_flags::sndmore);
-    routerSocket.send(message, zmq::send_flags::none);
-    spdlog::info("[Server] Sent metrics to client: {}", userId);
-  }
+  zmq::message_t message(userId.size());
+
+  std::string user_metrics = metrics[userId]->toJson().dump();
+
+  zmq::message_t body(user_metrics.size());
+  
+  std::memcpy(body.data(), user_metrics.data(), user_metrics.size());
+
+  std::memcpy(message.data(), userId.data(), userId.size());
+
+  routerSocket.send(message, zmq::send_flags::sndmore);
+  routerSocket.send(zmq::message_t(), zmq::send_flags::sndmore);
+  routerSocket.send(body, zmq::send_flags::none);
+  // routerSocket.send(body, zmq::send_flags::none);
+  spdlog::info("[ Metrics ] @ client: {}", userId);
 }
