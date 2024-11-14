@@ -8,7 +8,7 @@ class SimpleBot : public Bot
   SimpleBot(const std::string &serverAddress, std::string userId, OrderType t) : Bot(serverAddress, userId), type(t) { rng.seed(std::random_device()()); }
 
   protected:
-  void executeBot() override
+  void run() override
   {
     // generate a random price between 90 and 110
     std::uniform_real_distribution<double> priceDist(90.0, 110.0);
@@ -19,12 +19,10 @@ class SimpleBot : public Bot
     int                                quantity = quantityDist(rng);
 
     std::unique_ptr<Order> order = std::make_unique<Order>(type, price, quantity, getUserId());
-    sendOrder(order->toJson());
+    putOrder(order->toJson());
   }
 
   private:
   std::mt19937 rng;
   OrderType    type;
-
-  void analyzeOrderBook() { return; }
 };

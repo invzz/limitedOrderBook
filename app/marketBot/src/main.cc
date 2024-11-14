@@ -13,8 +13,8 @@ int main()
 
   std::vector<std::unique_ptr<Bot>> bots;
   bots.push_back(std::make_unique<SimpleBot>(serverAddress, "buyer", OrderType::BUY));
-  bots.push_back(std::make_unique<SimpleBot>(serverAddress, "seller", OrderType::SELL));
-  bots.push_back(std::make_unique<SmartBot>(serverAddress, "smarter"));
+  // bots.push_back(std::make_unique<SimpleBot>(serverAddress, "seller", OrderType::SELL));
+  // bots.push_back(std::make_unique<SmartBot>(serverAddress, "smarter"));
 
   for(auto &bot : bots) { bot->start(); }
 

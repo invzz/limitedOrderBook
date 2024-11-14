@@ -6,7 +6,7 @@ class SmartBot : public Bot
   SmartBot(const std::string &serverAddress, std::string userId) : Bot(serverAddress, userId) { rng.seed(std::random_device()()); }
 
   protected:
-  void executeBot() override
+  void run() override
   {
     if(!orderBook) { return; }
     auto bestAsk = orderBook->getBestAsk();
@@ -60,7 +60,7 @@ class SmartBot : public Bot
           }
       }
 
-    for(auto &order : orders) { sendOrder(order->toJson()); }
+    for(auto &order : orders) { putOrder(order->toJson()); }
   }
 
   private:
@@ -98,6 +98,4 @@ class SmartBot : public Bot
   }
 
   void placeOrder(OrderType type, double price, int quantity) { orders.push_back(std::make_unique<Order>(type, price, quantity, getUserId())); }
-
-
 };

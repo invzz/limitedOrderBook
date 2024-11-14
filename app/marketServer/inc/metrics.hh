@@ -15,6 +15,14 @@ class Metrics
   public:
   Metrics() : profit(0.0), position(0) {}
 
+  nlohmann::json toJson() const
+  {
+    return nlohmann::json{
+      {"profit", profit  },
+      {"userId", position}
+    };
+  }
+
   void addBuyTrade(const std::shared_ptr<Trade> &trade)
   {
     std::scoped_lock<std::shared_mutex> lock(buyTradesMtx);
