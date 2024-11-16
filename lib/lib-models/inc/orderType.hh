@@ -3,9 +3,9 @@
 
 enum class OrderType
 {
-  BUY,
-  SELL,
-  UNKNOWN
+    BUY,
+    SELL,
+    UNKNOWN
 };
 
 #endif // ORDER_TYPE_HH

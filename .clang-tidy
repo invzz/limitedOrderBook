@@ -1,0 +1,47 @@
+# .clang-tidy configuration file for C++17
+
+Checks: >
+  *,
+  -clang-analyzer-security.*,
+  -fuchsia-*,
+  -google-*,
+  -llvm-header-guard,
+  -readability-magic-numbers,
+  -hicpp-vararg,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-no-malloc,
+  -modernize-deprecated-headers
+
+WarningsAsErrors: '*'
+
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: true
+FormatStyle:  file
+
+CheckOptions:
+  - key: modernize-loop-convert.MaxCopySize
+    value: 16                     # Maximum size for copying in loop conversion
+  - key: modernize-use-auto.MinTypeNameLength
+    value: 4                      # Replace types with 'auto' for type names longer than this
+  - key: modernize-use-nullptr.NullMacros
+    value: ['NULL']               # Replace NULL with nullptr
+  - key: modernize-use-using
+    value: true                   # Prefer 'using' over 'typedef'
+  - key: cppcoreguidelines-special-member-functions
+    value: true                   # Encourage correct special member function definitions
+  - key: modernize-avoid-bind
+    value: true                   # Prefer lambdas over std::bind
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: m_                     # Prefix for private member variables
+  - key: readability-avoid-const-params-in-decls
+    value: true                   # Avoid 'const' in parameter declarations
+  - key: modernize-use-default-member-init
+    value: true                   # Encourage default member initialization
+  - key: modernize-use-emplace
+    value: true                   # Prefer emplace methods over insert/push

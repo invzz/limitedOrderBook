@@ -1,41 +1,36 @@
 #include "marketServer.hh"
+#include <iostream>
+#include <thread>
+#include <exception>
+#include <chrono>
 #include <spdlog/spdlog.h>
-#include <cxxopts.hpp>
 
-int main(int argc, char *argv[])
+#define RUNNING_SECONDS 5
+
+int main()
 {
-  spdlog::set_level(spdlog::level::info);
+    try
+        {
+            spdlog::set_level(spdlog::level::info);
 
-  auto seconds = 5;
+            spdlog::info("*** [ main ] MARKET SERVER ***");
 
-  // cxxopts::Options options("yams", "Yet Another Market Simulator");
+            std::shared_ptr<MarketServer> server = std::make_shared<MarketServer>();
 
-  //  options.add_options()("s,integer", "number of seconds", cxxopts::value<int>());
+            server->initialize(); // Ensure the controller is initialized after the MarketServer is managed by a shared_ptr
 
-  //  auto result = options.parse(argc, argv);
+            std::thread serverThread([&server]() { server->start(); });
 
-  // auto seconds = result["s"].as<int>();
+            std::cin.get();
 
-  // Create the market server
-  MarketServer server;
+            server->stop();
+            serverThread.join(); // Ensure the server thread is joined before exiting
+        }
+    catch(const std::exception &e)
+        {
+            spdlog::error("Exception caught in main: {}", e.what());
+            return 1;
+        }
 
-  // Start the server in a separate thread
-  std::cout << "*** [ main ] Starting server..." << std::endl;
-  std::thread serverThread([&server]() { server.start(); });
-
-  std::this_thread::sleep_for(std::chrono::seconds(seconds));
-
-  // Stop the server
-  std::cout << "*** [ main ] Stopping server..." << std::endl;
-
-  
-
-  // Join the server thread to make sure it shuts down properly
-  if(serverThread.joinable()) {
-      server.stop();
-      serverThread.join(); }
-
-  std::cout << "*** [ main ] Server stopped." << std::endl;
-
-  return 0;
+    return 0;
 }

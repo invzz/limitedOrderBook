@@ -125,4 +125,24 @@
             "resumable": "cpp"
         },
     },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Run clang-format",
+                "type": "shell",
+                "command": "powershell",
+                "args": [
+                    "-Command",
+                    "$extPath = Get-ChildItem -Directory -Path ${env:USERPROFILE}\\.vscode\\extensions\\ms-vscode.cpptools-1.22.11-win32-x64 | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName; Get-ChildItem -Recurse -Include *.cpp,*.h | ForEach-Object { & \"${extPath}\\LLVM\\bin\\clang-format.exe\" -i -verbose $_.FullName }"
+                ],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": [],
+                "detail": "Format all C++ source and header files using dynamically resolved clang-format"
+            }
+        ]
+    }
 }

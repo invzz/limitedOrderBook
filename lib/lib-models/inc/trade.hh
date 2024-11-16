@@ -6,33 +6,38 @@
 
 class Trade
 {
-  public:
-  Trade(int tick, std::string buyerId, std::string sellerId, double price, int quantity)
-      : tick(tick), buyerId(buyerId), sellerId(sellerId), price(price), quantity(quantity)
-  {}
-  int         getTick() const { return tick; }
-  std::string getBuyerId() const { return buyerId; }
-  std::string getSellerId() const { return sellerId; }
-  double      getPrice() const { return price; }
-  int         getQuantity() const { return quantity; }
+    public:
+    Trade(int tick, std::string buyerId, std::string sellerId, double price, int quantity)
+        : tick(tick), buyerId(buyerId), sellerId(sellerId), price(price), quantity(quantity)
+    {}
+    int         getId() const { return id; }
+    int         getTick() const { return tick; }
+    std::string getBuyerId() const { return buyerId; }
+    std::string getSellerId() const { return sellerId; }
+    double      getPrice() const { return price; }
+    int         getQuantity() const { return quantity; }
 
-  nlohmann::json toJson() const
-  {
-    return nlohmann::json{
-      {"tick",     tick    },
-      {"buyerId",  buyerId },
-      {"sellerId", sellerId},
-      {"price",    price   },
-      {"quantity", quantity}
-    };
-  }
+    void setId(int newId) { id = newId; }
 
-  private:
-  int         tick;
-  std::string buyerId;
-  std::string sellerId;
-  double      price;
-  int         quantity;
+    nlohmann::json getAsJson() const
+    {
+        return nlohmann::json{
+          {"id",       id      },
+          {"tick",     tick    },
+          {"buyerId",  buyerId },
+          {"sellerId", sellerId},
+          {"price",    price   },
+          {"quantity", quantity}
+        };
+    }
+
+    private:
+    int         id;
+    int         tick;
+    std::string buyerId;
+    std::string sellerId;
+    double      price;
+    int         quantity;
 };
 
 #endif // TRADE_HH

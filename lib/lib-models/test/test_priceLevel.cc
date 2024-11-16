@@ -6,22 +6,22 @@ std::unique_ptr<Order> createOrder(OrderType type, double price, int quantity, i
 
 TEST(PriceLevelTest, PriceLevelCreation)
 {
-  PriceLevel priceLevel(100);
-  EXPECT_EQ(priceLevel.getPrice(), 100);
+    PriceLevel priceLevel(100);
+    EXPECT_EQ(priceLevel.getPrice(), 100);
 }
 
 TEST(PriceLevelTest, AddAndRemoveOrder)
 {
-  PriceLevel priceLevel(100);
-  auto       buyOrder = createOrder(OrderType::BUY, 100, 10, 1);
-  priceLevel.addOrder(std::move(buyOrder));
+    PriceLevel priceLevel(100);
+    auto       buyOrder = createOrder(OrderType::BUY, 100, 10, 1);
+    priceLevel.addOrder(std::move(buyOrder));
 
-  EXPECT_EQ(priceLevel.getOrders().size(), 1);
+    EXPECT_EQ(priceLevel.getOrders().size(), 1);
 }
 
 int main(int argc, char **argv)
 {
-  spdlog::set_level(spdlog::level::critical);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    spdlog::set_level(spdlog::level::critical);
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

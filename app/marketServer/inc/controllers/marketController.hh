@@ -1,38 +1,30 @@
-
 #pragma once
+#include <memory>
+#include <string>
+#include <nlohmann/json.hpp>
+#include "orderBookService.hh"
 #include "command.hh"
-#include "marketServer.hh"
+#include "tradeTrackerService.hh"
+#include <spdlog/spdlog.h>
 
-class GetMetricsCommand : public Command
+// Forward declaration of MarketServer
+class MarketServer;
+
+#define TRADE_FORMAT "[ {} ] Trade: {} ==> {} [ {:4} @ {:2f} ]"
+
+class MarketController
 {
-  public:
-  GetMetricsCommand(MarketServer *server, const std::string &userId) : server_(server), userId_(userId) {}
+    public:
+    MarketController(std::shared_ptr<OrderBookService> orderBookService, std::shared_ptr<TradeTrackerService> tradeTrackerService,
+                     std::shared_ptr<MarketServer> server);
 
-  void execute(const std::string & /* body */) override { server_->GetMetrics(userId_); }
+    void GetMetrics(const std::string &userId);
+    void PutOrder(const std::string &body);
+    void match(int tick = 0);
+    void Stop();
 
-  private:
-  MarketServer *server_;
-  std::string   userId_;
-};
-
-class PutOrderCommand : public Command
-{
-  public:
-  PutOrderCommand(MarketServer *server) : server_(server) {}
-
-  void execute(const std::string &body) override { server_->PutOrder(body); }
-
-  private:
-  MarketServer *server_;
-};
-
-class StopCommand : public Command
-{
-  public:
-  StopCommand(MarketServer *server) : server_(server) {}
-
-  void execute(const std::string & /* body */) override { server_->stop(); }
-
-  private:
-  MarketServer *server_;
+    private:
+    std::shared_ptr<MarketServer>        server_;
+    std::shared_ptr<OrderBookService>    orderBookService_;
+    std::shared_ptr<TradeTrackerService> tradeTrackerService_;
 };

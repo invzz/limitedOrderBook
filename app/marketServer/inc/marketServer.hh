@@ -8,49 +8,49 @@
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
-#include "orderBook.hh"
-#include "order.hh"
-#include "metrics.hh"
-#include "common_topics.hh" // Include the shared header file
+#include "common_topics.hh"
+
+#include "orderBookService.hh"
+#include "marketController.hh"
+#include "marketMediator.hh"
+#include "tradeTrackerService.hh"
 
 #define PUB_ADDRESS    "tcp://*:5555"
 #define PULL_ADDRESS   "tcp://*:5556"
 #define ROUTER_ADDRESS "tcp://*:5557"
-#define TRADE_FORMAT   "[ {} ] Trade: {} -> {} [ {} @ {} ]"
 
-class MarketServer
+class MarketServer : public std::enable_shared_from_this<MarketServer>
 {
-  public:
-  MarketServer();
-  ~MarketServer();
+    public:
+    MarketServer();
 
-  int getTick() const;
+    void initialize();
+    void mainLoop();
+    void start();
+    void stop();
+    void sendMessage(const std::string &userId, const std::string &content);
 
-  void start();
-  void stop();
-  void liquidatePositions();
-  void generateReport();
-  void ListenForCommands();
-  void PutOrder(const std::string &message);
-  void GetMetrics(const std::string &clientId);
+    std::shared_ptr<OrderBookService>    getOrderBookService() const { return orderBookService_; }
+    std::shared_ptr<TradeTrackerService> getTradeTrackerService() const { return tradeTrackerService_; }
 
-  private:
-  void publishOrderBook();
+    private:
+    void commandLoop();
+    void publishOrderBook();
+    void liquidatePositions();
+    void generateReport();
 
+    std::shared_ptr<OrderBookService>    orderBookService_;
+    std::shared_ptr<MarketController>    controller_;
+    std::shared_ptr<MarketMediator>      mediator_;
+    std::shared_ptr<TradeTrackerService> tradeTrackerService_;
 
-  std::atomic<bool> running;
-  std::atomic<int>  current_tick = 0;
+    zmq::context_t context_;
+    zmq::socket_t  pubSocket_;
+    zmq::socket_t  routerSocket_;
 
-  zmq::context_t context;
-  zmq::socket_t  pubSocket;
-  zmq::socket_t  routerSocket; // Add a ROUTER socket
-
-  std::thread                                               OrderListenerThread;
-  std::thread                                               CommandListenerThread;
-  std::shared_mutex                                         metrics_mtx;
-  std::shared_mutex                                         orderBook_mtx;
-  std::unordered_map<std::string, std::unique_ptr<Metrics>> metrics;
-  OrderBook                                                 orderBook;
-
-  std::atomic<double> lastAvgPrice = 0.0;
+    std::atomic<bool> running_;
+    std::thread       CommandListenerThread_;
+    std::thread       MainLoopThread_;
+    int               current_tick_;
+    double            lastAvgPrice_;
 };

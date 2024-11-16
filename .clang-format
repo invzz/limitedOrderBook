@@ -1,5 +1,5 @@
 SortIncludes: Never
-BasedOnStyle: LLVM
+BasedOnStyle: Microsoft
 AccessModifierOffset: 0
 ColumnLimit: 160
 AlignAfterOpenBracket: Align
