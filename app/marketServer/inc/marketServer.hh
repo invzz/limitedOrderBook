@@ -52,5 +52,4 @@ class MarketServer : public std::enable_shared_from_this<MarketServer>
     std::thread       CommandListenerThread_;
     std::thread       MainLoopThread_;
     int               current_tick_;
-    double            lastAvgPrice_;
 };

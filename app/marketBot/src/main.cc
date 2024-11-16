@@ -1,7 +1,7 @@
 #include "simpleBot.hh"
 #include "smartBot.hh"
 #include "abstractBot.hh"
-#include "OrderType.hh"
+#include "orderType.hh"
 #include <spdlog/spdlog.h>
 #include <memory>
 #include <vector>
