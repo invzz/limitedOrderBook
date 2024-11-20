@@ -8,8 +8,7 @@ MarketServer::MarketServer()
       pubSocket_(context_, zmq::socket_type::pub), 
       routerSocket_(context_, zmq::socket_type::router), 
       running_(false), 
-      current_tick_(0), 
-      lastAvgPrice_(0.0)
+      current_tick_(0)
 // clang-format on
 {
     pubSocket_.bind(PUB_ADDRESS); // 5555
@@ -26,7 +25,10 @@ void MarketServer::initialize()
 }
 
 void MarketServer::mainLoop()
+
 {
+    // TODO : model tobin tax
+
     spdlog::info("[Server] Starting main loop");
     while(running_)
         {
@@ -38,7 +40,7 @@ void MarketServer::mainLoop()
 
             publishOrderBook();
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     pubSocket_.close();
@@ -73,6 +75,8 @@ void MarketServer::stop()
     context_.close();
 
     spdlog::info("[Server] Server stopped");
+
+    generateReport();
 }
 
 void MarketServer::sendMessage(const std::string &userId, const std::string &content)
@@ -87,7 +91,7 @@ void MarketServer::sendMessage(const std::string &userId, const std::string &con
     routerSocket_.send(zmq::message_t(), zmq::send_flags::sndmore);
     routerSocket_.send(body, zmq::send_flags::none);
 
-    spdlog::info("[ {} ] @ client: {}", __func__, userId);
+    // spdlog::info("[ {} ] @ client: {}", __func__, userId);
 }
 
 void MarketServer::commandLoop()
@@ -123,7 +127,7 @@ void MarketServer::commandLoop()
                 }
             if(!running_) { break; }
         }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     routerSocket_.close();
     spdlog::info("[Server] Stopping command loop");
 }
@@ -149,28 +153,27 @@ void MarketServer::publishOrderBook()
 
 void MarketServer::liquidatePositions()
 {
-    // std::scoped_lock lock(metrics_mtx_);
-    // for(const auto &[userId, botMetrics] : metrics_)
-    //     {
-    //         int position = botMetrics->getPosition();
-    //         spdlog::info("[Server] Liquidating position {} for user: {} , adding {} to : {} ", position, userId, position * lastAvgPrice_,
-    //                      botMetrics->getProfit());
-    //         botMetrics->updateProfit(position * lastAvgPrice_);
-    //     }
+    auto ids = tradeTrackerService_->getIds();
+    
+    for(const auto &id : ids)
+        {
+            auto service = tradeTrackerService_->getTradeService(id);
+            if(service->getPosition() > 0)
+                {
+                    spdlog::info("[Server] Liquidating position for user: {}", id);
+                    service->sell(std::make_shared<Trade>(id, service->getPosition(), 0.0));
+                }
+        }
+
 }
 
 void MarketServer::generateReport()
 {
-    nlohmann::json report;
-    // for(const auto &[userId, botMetrics] : metrics_)
-    //     {
-    //         report["bots"][userId] = {
-    //           {"totalProfit", botMetrics->getProfit()           },
-    //           {"position",    botMetrics->getPosition()         },
-    //           {"buyTrades",   botMetrics->getBuyTrades().size() },
-    //           {"sellTrades",  botMetrics->getSellTrades().size()}
-    //         };
-    //     }
+    auto report = tradeTrackerService_->getAsJson(false);
 
-    // spdlog::info("[Server] Simulation Report: \n{}", report.dump(4));
+    report["last tick"]   = current_tick_;
+    report["totalOrders"] = orderBookService_->getTotalOrdersCount();
+    report["avgPrice"]    = orderBookService_->getAvgPrice();
+
+    spdlog::info("[Server] Simulation Report: \n{}", report.dump(4));
 }

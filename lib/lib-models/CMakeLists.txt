@@ -5,13 +5,13 @@ file(GLOB ORDERBOOKLIB_HEADERS inc/*hh)
 file(GLOB ORDERBOOKLIB_SOURCES src/*.cc)
 
 # Create a static library
-add_library(${PROJECT_NAME} STATIC ${ORDERBOOKLIB_SOURCES} )
+add_library(${PROJECT_NAME} INTERFACE ${ORDERBOOKLIB_SOURCES} )
 
 # Set include directories to be exported
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 # Link spdlog to OrderBookLib
-target_link_libraries(${PROJECT_NAME} PUBLIC spdlog::spdlog nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} INTERFACE spdlog::spdlog nlohmann_json::nlohmann_json)
 
 # Add tests
 # enable_testing()

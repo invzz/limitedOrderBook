@@ -1,5 +1,4 @@
-#ifndef PRICELEVELSERVICE_HH
-#define PRICELEVELSERVICE_HH
+#pragma once
 #include <memory>
 #include <string>
 #include <nlohmann/json.hpp>
@@ -17,6 +16,7 @@ class PriceLevelService
         repository_ = std::make_shared<PriceLevelRepository>();
     }
     void clear() { repository_->clear(); }
+    
 
     void addOrder(double price, std::shared_ptr<Order> order)
     {
@@ -55,4 +55,3 @@ class PriceLevelService
     private:
     std::shared_ptr<PriceLevelRepository> repository_;
 };
-#endif

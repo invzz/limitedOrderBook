@@ -15,7 +15,10 @@ class PriceLevel
     mutable std::mutex                  mtx;    // Mutex to protect access to orders
 
     public:
-    PriceLevel(double price) : price(price) {}
+    PriceLevel(double price) : price(price)
+    {
+        orders.reserve(100); // Reserve some space for orders
+    }
 
     size_t size() const
     {
@@ -83,7 +86,7 @@ class PriceLevel
     double getPrice() const { return price; }
 
     // Getter for orders (const method)
-    std::vector<std::shared_ptr<Order>> &getOrders() { return orders; }
+    std::vector<std::shared_ptr<Order>> &getOrders() { return std::move(orders); }
 
     // Setter
     void setPrice(double newPrice) { price = newPrice; }

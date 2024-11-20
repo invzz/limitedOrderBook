@@ -62,7 +62,11 @@ class Order
     void setQuantity(int newQuantity) { quantity = newQuantity; }
 
     // Update quantity
-    void updateQuantity(int delta);
+    void updateQuantity(int delta)
+    {
+        quantity += delta;
+        if(quantity < 0) { quantity = 0; }
+    }
 };
 
 #endif // ORDER_HH

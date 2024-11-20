@@ -35,12 +35,6 @@ class TradeTrackerService
             }
     }
 
-    std::vector<std::string> getIds() const
-    {
-        for(const auto &[userId, service] : tradeServices_) { ids.push_back(userId); }
-        return ids;
-    }
-
     std::shared_ptr<TradeService> getTradeService(const std::string &userId) const
     {
         auto it = tradeServices_.find(userId);
@@ -48,10 +42,10 @@ class TradeTrackerService
         return nullptr;
     }
 
-    nlohmann::json getAsJson(bool serializeTrades = true) const
+    nlohmann::json getAsJson() const
     {
         nlohmann::json j;
-        for(const auto &[userId, service] : tradeServices_) { j[userId] = service->getAsJson(serializeTrades); }
+        for(const auto &[userId, service] : tradeServices_) { j[userId] = service->getAsJson(); }
         return j;
     }
 

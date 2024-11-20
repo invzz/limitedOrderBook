@@ -8,14 +8,14 @@ class SmartBot : public Bot
     protected:
     void run() override
     {
-        if(!orderBook) { return; }
-        auto bestAsk = orderBook->getBestAsk();
-        auto bestBid = orderBook->getBestBid();
+        if(!orderBookService) { return; }
+        auto bestAsk = orderBookService->getBestAsk();
+        auto bestBid = orderBookService->getBestBid();
 
         if(bestAsk.empty() || bestBid.empty()) { return; }
 
-        double bestAskPrice = bestAsk.front()->getPrice();
-        double bestBidPrice = bestBid.front()->getPrice();
+        double bestAskPrice = orderBookService->getBestAskPrice();
+        double bestBidPrice = orderBookService->getBestBidPrice();
 
         double spread = calculateSpread(bestBidPrice, bestAskPrice);
         avgPrice      = calculateAvgPrice(bestBidPrice, bestAskPrice);

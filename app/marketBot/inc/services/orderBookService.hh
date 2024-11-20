@@ -1,5 +1,4 @@
-#ifndef ORDER_BOOK_SERVICE_HH
-#define ORDER_BOOK_SERVICE_HH
+#pragma once
 #include <memory>
 #include <string>
 #include <nlohmann/json.hpp>
@@ -60,7 +59,9 @@ class OrderBookService
 
         try
             {
-                return bids_->getHighestPriceLevel()->getOrders();
+                auto level = bids_->getHighestPriceLevel();
+                if(level == nullptr) { return {}; }
+                return level->getOrders();
             }
         catch(const std::runtime_error &e)
             {
@@ -75,7 +76,11 @@ class OrderBookService
 
         try
             {
-                return asks_->getHighestPriceLevel()->getOrders();
+                auto level = asks_->getLowestPriceLevel();
+
+                if(level == nullptr) { return {}; }
+
+                return level->getOrders();
             }
         catch(const std::runtime_error &e)
             {
@@ -129,20 +134,23 @@ class OrderBookService
     void updateOrderBook(const nlohmann::json &orderBookData, bool doClean = false)
     {
         if(doClean) clear();
-        // Deserialize buy orders
-        for(const auto &buyLevelData : orderBookData["bids"])
-            {
-                auto buyLevel = PriceLevel::fromJson(buyLevelData);
-                if(buyLevel == nullptr) { continue; }
-                if(buyLevel->size() > 0) bids_->getLevel(buyLevel->getPrice()) = std::move(buyLevel);
-            }
 
-        // Deserialize sell orders
-        for(const auto &sellLevelData : orderBookData["asks"])
+       updateOrders(orderBookData["bids"], bids_);
+        updateOrders(orderBookData["asks"], asks_);
+    }
+
+    private:
+    void updateOrders(const nlohmann::json &levelsData, std::shared_ptr<PriceLevelService> &priceLevelService)
+    {
+        for(const auto &levelData : levelsData)
             {
-                auto sellLevel = PriceLevel::fromJson(sellLevelData);
-                if(sellLevel == nullptr) { continue; }
-                if(sellLevel->size() > 0) asks_->getLevel(sellLevel->getPrice()) = std::move(sellLevel);
+                auto level = PriceLevel::fromJson(levelData);
+                for(const auto &order : level->getOrders())
+                    {
+                        if(order == nullptr || order->getQuantity() == 0) { continue; }
+                        auto price = level->getPrice();
+                        priceLevelService->addOrder(price, order);
+                    }
             }
     }
 
@@ -189,7 +197,6 @@ class OrderBookService
         return trades;
     }
 
-    private:
     void matchOrders(int tick, std::vector<std::shared_ptr<Order>> &buyOrders, std::vector<std::shared_ptr<Order>> &sellOrders,
                      std::vector<std::shared_ptr<Trade>> &trades)
     {
@@ -233,4 +240,3 @@ class OrderBookService
     std::shared_ptr<PriceLevelService> asks_;
     std::atomic<int>                   nextId_;
 };
-#endif // ORDER_BOOK_SERVICE_HH

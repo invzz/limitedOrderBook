@@ -11,7 +11,7 @@ int main()
 {
     try
         {
-            spdlog::set_level(spdlog::level::info);
+            spdlog::set_level(spdlog::level::debug);
 
             spdlog::info("*** [ main ] MARKET SERVER ***");
 

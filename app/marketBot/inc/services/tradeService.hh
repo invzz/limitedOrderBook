@@ -1,5 +1,4 @@
-#ifndef TRADESERVICE_HH
-#define TRADESERVICE_HH
+#pragma once
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <atomic>
@@ -42,16 +41,11 @@ class TradeService
 
     std::vector<std::shared_ptr<Trade>> getSellTrades() const { return sellTrades_->getAll(); }
 
-    nlohmann::json getAsJson(bool serializeTrades = true) const
+    nlohmann::json getAsJson() const
     {
         nlohmann::json j;
-        if(serializeTrades)
-            {
-                if(buyTrades_->getAll().size() > 0) { j["buyTrades"] = buyTrades_->getAsJson(); }
-                if(sellTrades_->getAll().size() > 0) { j["sellTrades"] = sellTrades_->getAsJson(); }
-            }
-        j["profit"]   = getProfit();
-        j["position"] = getPosition();
+        if(buyTrades_->getAll().size() > 0) { j["buyTrades"] = buyTrades_->getAsJson(); }
+        if(sellTrades_->getAll().size() > 0) { j["sellTrades"] = sellTrades_->getAsJson(); }
         return j;
     }
 
@@ -72,4 +66,3 @@ class TradeService
     std::shared_ptr<TradeRepository> sellTrades_;
     std::atomic<int>                 next_id_;
 };
-#endif

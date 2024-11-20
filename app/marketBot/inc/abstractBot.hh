@@ -1,12 +1,10 @@
 #pragma once
-#include <zmq.hpp>
-#include <thread>
-#include <iostream>
+#include <memory>
+#include <string>
 #include <nlohmann/json.hpp>
-#include <mutex>
-#include "order.hh"
-#include "orderBook.hh"
-#include "spdlog/spdlog.h"
+#include "orderBookService.hh"
+#include <zmq.hpp>
+#include <spdlog/spdlog.h>
 #include "common_topics.hh"
 
 #define PULL_ADDRESS   "tcp://localhost:5555"
@@ -18,13 +16,16 @@ class Bot
     Bot(const std::string &serverAddress, std::string userId)
         : context(1), subSocket(context, zmq::socket_type::sub), dealerSocket(context, zmq::socket_type::dealer), userId(userId)
     {
+        orderBookService = std::make_shared<OrderBookService>();
         subSocket.connect(PULL_ADDRESS);
         subSocket.set(zmq::sockopt::subscribe, BOOK_TOPIC);
         dealerSocket.set(zmq::sockopt::routing_id, userId);
         dealerSocket.connect(ROUTER_ADDRESS);
     }
 
-    virtual ~Bot() { stop(); }
+    virtual void run() = 0;
+
+    void doRun() { run(); }
 
     void start()
     {
@@ -35,26 +36,15 @@ class Bot
 
     void stop()
     {
-        if(subThread.joinable())
-            {
-                running = false;
-                subThread.join();
-            }
-        if(dealerThread.joinable())
-            {
-                running = false;
-                dealerThread.join();
-            }
+        spdlog::info("[ {} ] Stopping...", userId);
+        running = false;
+        if(subThread.joinable()) { subThread.join(); }
+        if(dealerThread.joinable()) { dealerThread.join(); }
     }
-
-    virtual void run() = 0;
-
-    void doRun() { run(); }
-
     std::string getUserId() const { return userId; }
 
     protected:
-    std::shared_ptr<OrderBook> orderBook;
+    std::shared_ptr<OrderBookService> orderBookService;
 
     void putOrder(const nlohmann::json &order)
     {
@@ -83,30 +73,17 @@ class Bot
                 if(orderBookUpdate.is_array() && orderBookUpdate.empty())
                     {
                         spdlog::debug("[ {} ] order book is empty", userId);
-                        orderBook = std::make_unique<OrderBook>();
+                        orderBookService->clear();
                     }
                 else
                     {
-                        spdlog::debug("[ {} ] Received order book update! ", userId);
-                        orderBook = OrderBook::fromJson(orderBookUpdate);
+                        orderBookService->updateOrderBook(orderBookUpdate, true);
+                        spdlog::debug("[ {} ] Updated order book:\n{}", userId, orderBookUpdate.dump());
                     }
             }
-        catch(const nlohmann::json::exception &e)
+        catch(const std::exception &e)
             {
-                spdlog::error("[ {} ] Failed to process order book update: {} - {}", userId, e.what(), update);
-            }
-    }
-
-    void updateMetrics(const std::string &update)
-    {
-        try
-            {
-                nlohmann::json metricsUpdate = nlohmann::json::parse(update);
-                spdlog::debug("[ {} ] Received metrics update {}", userId, metricsUpdate.dump(4));
-            }
-        catch(const nlohmann::json::exception &e)
-            {
-                spdlog::error("[ {} ] Failed to process metrics update: {} - {}", userId, e.what(), update);
+                spdlog::error("[ {} ] Failed to update order book: {}", userId, e.what());
             }
     }
 
@@ -124,23 +101,26 @@ class Bot
         zmq::message_t identity;
         zmq::message_t message;
 
-        // First frame: the identity (user ID), which you can ignore if not needed
         if(dealerSocket.recv(identity, zmq::recv_flags::dontwait))
             {
-                spdlog::info("[{}] Received identity", userId);
-                // Second frame: the actual message content
                 if(dealerSocket.recv(message, zmq::recv_flags::dontwait))
                     {
                         std::string receivedMessage(static_cast<char *>(message.data()), message.size());
-
-                        spdlog::info("[{}] Received metrics: {}", userId, receivedMessage);
-
-                        // Process the metrics update
                         updateMetrics(receivedMessage);
                     }
             }
     }
-
+    void updateMetrics(const std::string &update)
+    {
+        try
+            {
+                nlohmann::json metricsUpdate = nlohmann::json::parse(update);
+            }
+        catch(const nlohmann::json::exception &e)
+            {
+                spdlog::error("[ {} ] Failed to process metrics update: {} - {}", userId, e.what(), update);
+            }
+    }
     void listenForOrderBookSub()
     {
         while(running)
@@ -156,5 +136,6 @@ class Bot
                     }
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
+        spdlog::info("[ {} ] terminating thread {} ", userId, __func__);
     }
 };
