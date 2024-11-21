@@ -2,25 +2,22 @@
 #include <memory>
 #include <string>
 #include <nlohmann/json.hpp>
-#include "orderBookService.hh"
 #include <zmq.hpp>
 #include <spdlog/spdlog.h>
-#include "common_topics.hh"
+#include "orderBookService.hh"
+#include "common.hh"
 
-#define PULL_ADDRESS   "tcp://localhost:5555"
-#define ROUTER_ADDRESS "tcp://localhost:5557"
-
-class Bot
+class MarketClient
 {
     public:
-    Bot(const std::string &serverAddress, std::string userId)
+    MarketClient(const std::string &serverAddress, std::string userId)
         : context(1), subSocket(context, zmq::socket_type::sub), dealerSocket(context, zmq::socket_type::dealer), userId(userId)
     {
         orderBookService = std::make_shared<OrderBookService>();
-        subSocket.connect(PULL_ADDRESS);
+        subSocket.connect(CLIENT_PULL_ADDRESS);
         subSocket.set(zmq::sockopt::subscribe, BOOK_TOPIC);
         dealerSocket.set(zmq::sockopt::routing_id, userId);
-        dealerSocket.connect(ROUTER_ADDRESS);
+        dealerSocket.connect(CLIENT_ROUTER_ADDRESS);
     }
 
     virtual void run() = 0;
@@ -31,7 +28,7 @@ class Bot
     {
         spdlog::info("Starting Bot {}", userId);
         running   = true;
-        subThread = std::thread(&Bot::listenForOrderBookSub, this);
+        subThread = std::thread(&MarketClient::listenForOrderBookSub, this);
     }
 
     void stop()

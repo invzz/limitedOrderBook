@@ -8,16 +8,12 @@
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
-#include "common_topics.hh"
-
 #include "orderBookService.hh"
 #include "marketController.hh"
 #include "marketMediator.hh"
 #include "tradeTrackerService.hh"
 
-#define PUB_ADDRESS    "tcp://*:5555"
-#define PULL_ADDRESS   "tcp://*:5556"
-#define ROUTER_ADDRESS "tcp://*:5557"
+#include "common.hh"
 
 class MarketServer : public std::enable_shared_from_this<MarketServer>
 {

@@ -1,6 +1,6 @@
 #include "simpleBot.hh"
 #include "smartBot.hh"
-#include "abstractBot.hh"
+#include "MarketClient.hh"
 #include "orderType.hh"
 #include <spdlog/spdlog.h>
 #include <memory>
@@ -14,8 +14,8 @@ int main()
         {
             // if compiled in debug mode, set the log level to debug
             spdlog::set_level(spdlog::level::debug);
-            const auto                       *SERVER_ADDRESS = "tcp://localhost";
-            std::vector<std::unique_ptr<Bot>> bots;
+            const auto                                *SERVER_ADDRESS = "tcp://localhost";
+            std::vector<std::unique_ptr<MarketClient>> bots;
             bots.push_back(std::make_unique<SimpleBot>(SERVER_ADDRESS, "buyer", OrderType::BUY));
             bots.push_back(std::make_unique<SimpleBot>(SERVER_ADDRESS, "seller", OrderType::SELL));
             bots.push_back(std::make_unique<SmartBot>(SERVER_ADDRESS, "smarter"));

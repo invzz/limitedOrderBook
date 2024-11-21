@@ -4,7 +4,6 @@
         "gtest",
         "spdlog",
         "cppzmq",
-        "nlohmann-json",
-        "cxxopts"
+        "nlohmann-json"
     ]
 }

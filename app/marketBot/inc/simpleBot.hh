@@ -1,11 +1,14 @@
-#include "abstractBot.hh"
+#include "MarketClient.hh"
 
 #include <random>
 
-class SimpleBot : public Bot
+class SimpleBot : public MarketClient
 {
     public:
-    SimpleBot(const std::string &serverAddress, std::string userId, OrderType t) : Bot(serverAddress, userId), type(t) { rng.seed(std::random_device()()); }
+    SimpleBot(const std::string &serverAddress, std::string userId, OrderType t) : MarketClient(serverAddress, userId), type(t)
+    {
+        rng.seed(std::random_device()());
+    }
 
     protected:
     void run() override

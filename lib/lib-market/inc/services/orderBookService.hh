@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ORDER_BOOK_SERVICE_HH
+#define ORDER_BOOK_SERVICE_HH
 #include <memory>
 #include <string>
 #include <nlohmann/json.hpp>
@@ -139,21 +140,6 @@ class OrderBookService
         updateOrders(orderBookData["asks"], asks_);
     }
 
-    private:
-    void updateOrders(const nlohmann::json &levelsData, std::shared_ptr<PriceLevelService> &priceLevelService)
-    {
-        for(const auto &levelData : levelsData)
-            {
-                auto level = PriceLevel::fromJson(levelData);
-                for(const auto &order : level->getOrders())
-                    {
-                        if(order == nullptr || order->getQuantity() == 0) { continue; }
-                        auto price = level->getPrice();
-                        priceLevelService->addOrder(price, order);
-                    }
-            }
-    }
-
     std::vector<std::shared_ptr<Trade>> match(int tick)
     {
         std::vector<std::shared_ptr<Trade>> trades;
@@ -197,6 +183,21 @@ class OrderBookService
         return trades;
     }
 
+    private:
+    void updateOrders(const nlohmann::json &levelsData, std::shared_ptr<PriceLevelService> &priceLevelService)
+    {
+        for(const auto &levelData : levelsData)
+            {
+                auto level = PriceLevel::fromJson(levelData);
+                for(const auto &order : level->getOrders())
+                    {
+                        if(order == nullptr || order->getQuantity() == 0) { continue; }
+                        auto price = level->getPrice();
+                        priceLevelService->addOrder(price, order);
+                    }
+            }
+    }
+
     void matchOrders(int tick, std::vector<std::shared_ptr<Order>> &buyOrders, std::vector<std::shared_ptr<Order>> &sellOrders,
                      std::vector<std::shared_ptr<Trade>> &trades)
     {
@@ -235,8 +236,10 @@ class OrderBookService
                 if(buyOrderIt != buyOrders.end()) { ++buyOrderIt; }
             }
     }
+
     std::shared_mutex                  mtx_;
     std::shared_ptr<PriceLevelService> bids_;
     std::shared_ptr<PriceLevelService> asks_;
     std::atomic<int>                   nextId_;
 };
+#endif

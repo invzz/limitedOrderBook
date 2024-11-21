@@ -1,9 +1,9 @@
-#include "abstractBot.hh"
+#include "MarketClient.hh"
 
-class SmartBot : public Bot
+class SmartBot : public MarketClient
 {
     public:
-    SmartBot(const std::string &serverAddress, std::string userId) : Bot(serverAddress, userId) { rng.seed(std::random_device()()); }
+    SmartBot(const std::string &serverAddress, std::string userId) : MarketClient(serverAddress, userId) { rng.seed(std::random_device()()); }
 
     protected:
     void run() override

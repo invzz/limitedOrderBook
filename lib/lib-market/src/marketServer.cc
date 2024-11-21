@@ -22,7 +22,7 @@ MarketServer::MarketServer()
 {
     routerSocket_.set(zmq::sockopt::router_mandatory, true);
     routerSocket_.set(zmq::sockopt::rcvtimeo, ROUTER_SOCKET_TIMEOUT);
-    routerSocket_.bind(ROUTER_ADDRESS); // 5557
+    routerSocket_.bind(SERVER_ROUTER_ADDRESS);
 }
 
 void MarketServer::initialize()

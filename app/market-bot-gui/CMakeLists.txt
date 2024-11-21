@@ -10,7 +10,12 @@ set(SOURCES src/main.cc )
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE cppzmq cppzmq-static lib-market spdlog::spdlog)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+# Set include directories to be exported
+target_include_directories(${PROJECT_NAME} PUBLIC 
+${CMAKE_CURRENT_SOURCE_DIR}/inc
+${CMAKE_CURRENT_SOURCE_DIR}/inc/repositories
+${CMAKE_CURRENT_SOURCE_DIR}/inc/services
 
+)
 
 
