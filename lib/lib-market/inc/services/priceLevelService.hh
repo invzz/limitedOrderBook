@@ -7,52 +7,54 @@
 #include "priceLevelRepository.hh"
 #include <spdlog/spdlog.h>
 #include <vector>
-
-class PriceLevelService
+namespace market
 {
-    public:
-    PriceLevelService()
+    class PriceLevelService
     {
-        spdlog::info("[ {} ] Created", __func__);
-        repository_ = std::make_shared<PriceLevelRepository>();
-    }
-    void clear() { repository_->clear(); }
+        public:
+        PriceLevelService()
+        {
+            spdlog::info("[ {} ] Created", __func__);
+            repository_ = std::make_shared<PriceLevelRepository>();
+        }
+        void clear() { repository_->clear(); }
 
-    void addOrder(double price, std::shared_ptr<Order> order)
-    {
-        auto level = repository_->get(price);
-        if(!level)
-            {
-                level = std::make_shared<PriceLevel>(price);
-                repository_->add(price, level);
-            }
-        level->addOrder(std::move(order));
-    }
+        void addOrder(double price, std::shared_ptr<Order> order)
+        {
+            auto level = repository_->get(price);
+            if(!level)
+                {
+                    level = std::make_shared<PriceLevel>(price);
+                    repository_->add(price, level);
+                }
+            level->addOrder(std::move(order));
+        }
 
-    std::shared_ptr<PriceLevel> getLevel(double price) const { return repository_->get(price); }
+        std::shared_ptr<PriceLevel> getLevel(double price) const { return repository_->get(price); }
 
-    std::map<double, std::shared_ptr<PriceLevel>> getAsMap() const { return repository_->getAll(); }
+        std::map<double, std::shared_ptr<PriceLevel>> getAsMap() const { return repository_->getAll(); }
 
-    double getLowestPrice() const { return repository_->getLowestPrice(); }
+        double getLowestPrice() const { return repository_->getLowestPrice(); }
 
-    std::shared_ptr<PriceLevel> getLowestPriceLevel() const { return repository_->getLowestLevel(); }
+        std::shared_ptr<PriceLevel> getLowestPriceLevel() const { return repository_->getLowestLevel(); }
 
-    double getHighestPrice() const { return repository_->getHighestPrice(); }
+        double getHighestPrice() const { return repository_->getHighestPrice(); }
 
-    std::shared_ptr<PriceLevel> getHighestPriceLevel() const { return repository_->getHighestLevel(); }
+        std::shared_ptr<PriceLevel> getHighestPriceLevel() const { return repository_->getHighestLevel(); }
 
-    std::vector<std::shared_ptr<Order>> getOrdersAtPrice(double price) const
-    {
-        auto level = repository_->get(price);
-        if(level) { return level->getOrders(); }
-        return {};
-    }
+        std::vector<std::shared_ptr<Order>> getOrdersAtPrice(double price) const
+        {
+            auto level = repository_->get(price);
+            if(level) { return level->getOrders(); }
+            return {};
+        }
 
-    size_t getOrdersCount() const { return repository_->getOrdersCount(); }
+        size_t getOrdersCount() const { return repository_->getOrdersCount(); }
 
-    nlohmann::json getAsJson() const { return repository_->getAsJson(); }
+        nlohmann::json getAsJson() const { return repository_->getAsJson(); }
 
-    private:
-    std::shared_ptr<PriceLevelRepository> repository_;
-};
+        private:
+        std::shared_ptr<PriceLevelRepository> repository_;
+    };
+} // namespace market
 #endif

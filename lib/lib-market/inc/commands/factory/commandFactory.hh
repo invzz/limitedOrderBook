@@ -10,19 +10,23 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
-struct CommandParams
-{
-    std::string command;
-    std::string userId;
-};
-class CommandFactory
-{
-    public:
-    using CommandCreator = std::function<std::unique_ptr<BaseCommand>(std::shared_ptr<MarketController>, const std::string &)>;
-    using CommandMap     = std::unordered_map<std::string, CommandCreator>;
 
-    static std::unique_ptr<BaseCommand> createCommand(const CommandParams &params, std::shared_ptr<MarketController> controller);
+namespace market
+{
+    struct CommandParams
+    {
+        std::string command;
+        std::string userId;
+    };
+    class CommandFactory
+    {
+        public:
+        using CommandCreator = std::function<std::unique_ptr<BaseCommand>(std::shared_ptr<MarketController>, const std::string &)>;
+        using CommandMap     = std::unordered_map<std::string, CommandCreator>;
 
-    private:
-    static const CommandMap commandMap;
-};
+        static std::unique_ptr<BaseCommand> createCommand(const CommandParams &params, std::shared_ptr<MarketController> controller);
+
+        private:
+        static const CommandMap commandMap;
+    };
+} // namespace market

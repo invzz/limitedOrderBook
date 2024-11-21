@@ -6,22 +6,24 @@
 #include <string>
 #include <spdlog/spdlog.h>
 #include <any>
-
-class MarketMediator
+namespace market
 {
-    public:
-    MarketMediator() { spdlog::info("[ {} ] Created", __func__); }
-
-    void handleRequest(const std::string &commandType, const std::any &body, const std::string &userId = "")
+    class MarketMediator
     {
-        CommandParams params{commandType, userId};
-        auto          command = CommandFactory::createCommand(params, controller_);
-        if(command) { command->execute(body); }
-        else { spdlog::error("Unknown command type: {}", commandType); }
-    }
+        public:
+        MarketMediator() { spdlog::info("[ {} ] Created", __func__); }
 
-    void setController(std::shared_ptr<MarketController> controller) { controller_ = controller; }
+        void handleRequest(const std::string &commandType, const std::any &body, const std::string &userId = "")
+        {
+            CommandParams params{commandType, userId};
+            auto          command = CommandFactory::createCommand(params, controller_);
+            if(command) { command->execute(body); }
+            else { spdlog::error("Unknown command type: {}", commandType); }
+        }
 
-    private:
-    std::shared_ptr<MarketController> controller_;
-};
+        void setController(std::shared_ptr<MarketController> controller) { controller_ = controller; }
+
+        private:
+        std::shared_ptr<MarketController> controller_;
+    };
+} // namespace market

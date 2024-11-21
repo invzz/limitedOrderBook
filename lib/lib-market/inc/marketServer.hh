@@ -15,37 +15,41 @@
 
 #include "common.hh"
 
-class MarketServer : public std::enable_shared_from_this<MarketServer>
+namespace market
 {
-    public:
-    MarketServer();
+    class MarketServer : public std::enable_shared_from_this<MarketServer>
+    {
+        public:
+        MarketServer();
 
-    void initialize();
-    void mainLoop();
-    void start();
-    void stop();
-    void sendMessage(const std::string &userId, const std::string &content);
+        void initialize();
+        void mainLoop();
+        void start();
+        void stop();
+        void sendMessage(const std::string &userId, const std::string &content);
 
-    std::shared_ptr<OrderBookService>    getOrderBookService() const { return orderBookService_; }
-    std::shared_ptr<TradeTrackerService> getTradeTrackerService() const { return tradeTrackerService_; }
+        std::shared_ptr<OrderBookService>    getOrderBookService() const { return orderBookService_; }
+        std::shared_ptr<TradeTrackerService> getTradeTrackerService() const { return tradeTrackerService_; }
 
-    private:
-    void commandLoop();
-    void publishOrderBook();
-    void liquidatePositions();
-    void generateReport();
+        private:
+        void commandLoop();
+        void publishOrderBook();
+        void liquidatePositions();
+        void generateReport();
 
-    std::shared_ptr<OrderBookService>    orderBookService_;
-    std::shared_ptr<MarketController>    controller_;
-    std::shared_ptr<MarketMediator>      mediator_;
-    std::shared_ptr<TradeTrackerService> tradeTrackerService_;
+        std::shared_ptr<OrderBookService>    orderBookService_;
+        std::shared_ptr<MarketController>    controller_;
+        std::shared_ptr<MarketMediator>      mediator_;
+        std::shared_ptr<TradeTrackerService> tradeTrackerService_;
 
-    zmq::context_t context_;
-    zmq::socket_t  pubSocket_;
-    zmq::socket_t  routerSocket_;
+        zmq::context_t context_;
+        zmq::socket_t  pubSocket_;
+        zmq::socket_t  routerSocket_;
 
-    std::atomic<bool> running_;
-    std::thread       CommandListenerThread_;
-    std::thread       MainLoopThread_;
-    int               current_tick_;
-};
+        std::atomic<bool> running_;
+        std::thread       CommandListenerThread_;
+        std::thread       MainLoopThread_;
+        int               current_tick_;
+    };
+
+} // namespace market

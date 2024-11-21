@@ -1,12 +1,15 @@
+#include <memory>
+#include <vector>
+#include <thread>
+#include <iostream>
+
 #include "simpleBot.hh"
 #include "smartBot.hh"
 #include "MarketClient.hh"
 #include "orderType.hh"
 #include <spdlog/spdlog.h>
-#include <memory>
-#include <vector>
-#include <thread>
-#include <iostream>
+
+using namespace market;
 
 int main()
 {

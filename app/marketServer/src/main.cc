@@ -4,6 +4,7 @@
 #include <exception>
 #include <chrono>
 #include <spdlog/spdlog.h>
+using namespace market;
 
 int main()
 {
