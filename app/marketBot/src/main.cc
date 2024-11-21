@@ -14,11 +14,11 @@ int main()
         {
             // if compiled in debug mode, set the log level to debug
             spdlog::set_level(spdlog::level::debug);
-            const auto                       *serverAddress = "tcp://localhost";
+            const auto                       *SERVER_ADDRESS = "tcp://localhost";
             std::vector<std::unique_ptr<Bot>> bots;
-            bots.push_back(std::make_unique<SimpleBot>(serverAddress, "buyer", OrderType::BUY));
-            bots.push_back(std::make_unique<SimpleBot>(serverAddress, "seller", OrderType::SELL));
-            bots.push_back(std::make_unique<SmartBot>(serverAddress, "smarter"));
+            bots.push_back(std::make_unique<SimpleBot>(SERVER_ADDRESS, "buyer", OrderType::BUY));
+            bots.push_back(std::make_unique<SimpleBot>(SERVER_ADDRESS, "seller", OrderType::SELL));
+            bots.push_back(std::make_unique<SmartBot>(SERVER_ADDRESS, "smarter"));
             std::vector<std::thread> botThreads;
             // create a thread for each bot and start
             for(auto &bot : bots)

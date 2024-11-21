@@ -9,7 +9,7 @@
 class TradeRepository
 {
     public:
-    TradeRepository() { spdlog::info("[TradeRepository] Creating TradeRepository instance"); }
+    TradeRepository() { spdlog::info("[TradeRepository] :: Creating TradeRepository instance"); }
 
     void add(const int &id, std::shared_ptr<Trade> entity)
     {
