@@ -14,7 +14,8 @@ class MarketMediator
 
     void handleRequest(const std::string &commandType, const std::any &body, const std::string &userId = "")
     {
-        auto command = CommandFactory::createCommand(commandType, userId, controller_);
+        CommandParams params{commandType, userId};
+        auto          command = CommandFactory::createCommand(params, controller_);
         if(command) { command->execute(body); }
         else { spdlog::error("Unknown command type: {}", commandType); }
     }

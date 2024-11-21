@@ -16,7 +16,6 @@ class PriceLevelService
         repository_ = std::make_shared<PriceLevelRepository>();
     }
     void clear() { repository_->clear(); }
-    
 
     void addOrder(double price, std::shared_ptr<Order> order)
     {

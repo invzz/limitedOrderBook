@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TRADE_TRACKER_SERVICE_HH
+#define TRADE_TRACKER_SERVICE_HH
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <atomic>
@@ -37,6 +38,7 @@ class TradeTrackerService
 
     std::vector<std::string> getIds() const
     {
+        auto ids = std::vector<std::string>();
         for(const auto &[userId, service] : tradeServices_) { ids.push_back(userId); }
         return ids;
     }
@@ -74,3 +76,4 @@ class TradeTrackerService
     private:
     std::unordered_map<std::string, std::shared_ptr<TradeService>> tradeServices_;
 };
+#endif // TRADE_TRACKER_SERVICE_HH

@@ -4,9 +4,11 @@
 
 MarketController::MarketController(std::shared_ptr<OrderBookService> orderBookService, std::shared_ptr<TradeTrackerService> tradeTrackerService,
                                    std::shared_ptr<MarketServer> server)
-    : orderBookService_(orderBookService), tradeTrackerService_(tradeTrackerService), server_(server)
-{}
-
+{
+    orderBookService_    = orderBookService;
+    tradeTrackerService_ = tradeTrackerService;
+    server_              = server;
+}
 void MarketController::GetMetrics(const std::string &userId)
 {
     if(userId.empty()) { return; }

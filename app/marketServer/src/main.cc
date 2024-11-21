@@ -5,8 +5,6 @@
 #include <chrono>
 #include <spdlog/spdlog.h>
 
-#define RUNNING_SECONDS 5
-
 int main()
 {
     try
@@ -24,6 +22,7 @@ int main()
             std::cin.get();
 
             server->stop();
+
             serverThread.join(); // Ensure the server thread is joined before exiting
         }
     catch(const std::exception &e)

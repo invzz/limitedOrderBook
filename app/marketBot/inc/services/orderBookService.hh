@@ -135,7 +135,7 @@ class OrderBookService
     {
         if(doClean) clear();
 
-       updateOrders(orderBookData["bids"], bids_);
+        updateOrders(orderBookData["bids"], bids_);
         updateOrders(orderBookData["asks"], asks_);
     }
 

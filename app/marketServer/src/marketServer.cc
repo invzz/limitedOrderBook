@@ -1,4 +1,13 @@
 #include "marketServer.hh"
+
+#ifndef MAIN_LOOP_SLEEP_TIME
+#define MAIN_LOOP_SLEEP_TIME 100
+#endif
+
+#ifndef ROUTER_SOCKET_TIMEOUT
+#define ROUTER_SOCKET_TIMEOUT 100
+#endif
+
 // clang-format off
 MarketServer::MarketServer()
     : orderBookService_(std::make_shared<OrderBookService>()), 
@@ -7,15 +16,13 @@ MarketServer::MarketServer()
       context_(1),
       pubSocket_(context_, zmq::socket_type::pub), 
       routerSocket_(context_, zmq::socket_type::router), 
-      running_(false), 
+      running_(true), 
       current_tick_(0)
 // clang-format on
 {
-    pubSocket_.bind(PUB_ADDRESS); // 5555
     routerSocket_.set(zmq::sockopt::router_mandatory, true);
-    routerSocket_.set(zmq::sockopt::rcvtimeo, 100);
+    routerSocket_.set(zmq::sockopt::rcvtimeo, ROUTER_SOCKET_TIMEOUT);
     routerSocket_.bind(ROUTER_ADDRESS); // 5557
-    running_ = true;
 }
 
 void MarketServer::initialize()
@@ -42,7 +49,7 @@ void MarketServer::mainLoop()
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_LOOP_SLEEP_TIME));
     pubSocket_.close();
     spdlog::info("[Server] Stopping main loop");
 }
@@ -153,18 +160,16 @@ void MarketServer::publishOrderBook()
 
 void MarketServer::liquidatePositions()
 {
-    auto ids = tradeTrackerService_->getIds();
-    
+    std::vector<std::string> ids = tradeTrackerService_->getIds();
+
     for(const auto &id : ids)
         {
-            auto service = tradeTrackerService_->getTradeService(id);
-            if(service->getPosition() > 0)
-                {
-                    spdlog::info("[Server] Liquidating position for user: {}", id);
-                    service->sell(std::make_shared<Trade>(id, service->getPosition(), 0.0));
-                }
+            auto service  = tradeTrackerService_->getTradeService(id);
+            auto position = service->getPosition();
+            spdlog::info("[Server] Liquidating position for user: {}", id);
+            auto money = position * orderBookService_->getAvgPrice();
+            service->liquidate(current_tick_, money, id);
         }
-
 }
 
 void MarketServer::generateReport()

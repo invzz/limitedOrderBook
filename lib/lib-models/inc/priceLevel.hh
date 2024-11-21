@@ -86,7 +86,7 @@ class PriceLevel
     double getPrice() const { return price; }
 
     // Getter for orders (const method)
-    std::vector<std::shared_ptr<Order>> &getOrders() { return std::move(orders); }
+    std::vector<std::shared_ptr<Order>> &getOrders() { return orders; }
 
     // Setter
     void setPrice(double newPrice) { price = newPrice; }
