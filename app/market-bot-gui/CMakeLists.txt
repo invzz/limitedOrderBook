@@ -1,21 +1,10 @@
-project(marketbot)
-
-
-find_package(cppzmq REQUIRED)
-
-# Main application source
+project(server-side-app)
 set(SOURCES src/main.cc )
-
-# Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PRIVATE lib-market  )
+file(GLOB_RECURSE files *.cc *.hh)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE cppzmq cppzmq-static lib-market spdlog::spdlog)
-# Set include directories to be exported
-target_include_directories(${PROJECT_NAME} PUBLIC 
-${CMAKE_CURRENT_SOURCE_DIR}/inc
-${CMAKE_CURRENT_SOURCE_DIR}/inc/repositories
-${CMAKE_CURRENT_SOURCE_DIR}/inc/services
-
-)
-
-
+foreach(line IN LISTS files)
+    string(APPEND multiline "[${PROJECT_NAME}] :: ${line}\n")
+endforeach() 
+message("${multiline}")

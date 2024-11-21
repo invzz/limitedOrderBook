@@ -41,8 +41,6 @@ namespace market
                 tradeTrackerService_->addBuyById(trade->getBuyerId(), trade);
                 tradeTrackerService_->addSellById(trade->getSellerId(), trade);
             }
-
-        // Implement the logic to match orders
     }
 
     void MarketController::Stop() { server_->stop(); }

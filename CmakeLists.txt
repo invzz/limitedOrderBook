@@ -7,7 +7,14 @@ find_package(spdlog REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+
+message (STATUS "[add] LIBS :: looking for sources")
 add_subdirectory(lib)
+message (STATUS "[add] APPS :: looking for sources")
 add_subdirectory(app)
 find_program(CLANG_FORMAT clang-format)
-file(GLOB_RECURSE ALL_CXX_SOURCE_FILES *.cc *.hh)
+
+message (STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+
+
+

@@ -21,4 +21,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cppzmq-static spdlog::spdlog_header_only nlohmann_json::nlohmann_json)
-
+file(GLOB_RECURSE files *.cc *.hh)
+foreach(line IN LISTS files)
+    string(APPEND multiline "[${PROJECT_NAME}] :: ${line}\n")
+endforeach() 
+message("${multiline}")

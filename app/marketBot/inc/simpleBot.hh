@@ -3,6 +3,7 @@
 #include <random>
 
 using namespace market;
+
 class SimpleBot : public MarketClient
 {
     public:
