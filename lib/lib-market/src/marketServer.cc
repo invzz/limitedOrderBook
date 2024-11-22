@@ -22,6 +22,8 @@ MarketServer::MarketServer()
       current_tick_(0)
     // clang-format on
     {
+        pubSocket_.bind(SERVER_PUB_ADDRESS);
+
         routerSocket_.set(zmq::sockopt::router_mandatory, true);
         routerSocket_.set(zmq::sockopt::rcvtimeo, ROUTER_SOCKET_TIMEOUT);
         routerSocket_.bind(SERVER_ROUTER_ADDRESS);
@@ -36,8 +38,6 @@ MarketServer::MarketServer()
     void MarketServer::mainLoop()
 
     {
-        // TODO : model tobin tax
-
         spdlog::info("[Server] Starting main loop");
         while(running_)
             {
@@ -99,8 +99,6 @@ MarketServer::MarketServer()
         routerSocket_.send(message, zmq::send_flags::sndmore);
         routerSocket_.send(zmq::message_t(), zmq::send_flags::sndmore);
         routerSocket_.send(body, zmq::send_flags::none);
-
-        // spdlog::info("[ {} ] @ client: {}", __func__, userId);
     }
 
     void MarketServer::commandLoop()

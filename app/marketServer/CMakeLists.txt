@@ -1,10 +1,13 @@
-project(server-side-app)
-set(SOURCES src/main.cc )
-add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE lib-market  )
+cmake_minimum_required(VERSION 3.10)
 
-file(GLOB_RECURSE files *.cc *.hh)
-foreach(line IN LISTS files)
-    string(APPEND multiline "[${PROJECT_NAME}] :: ${line}\n")
-endforeach() 
-message("${multiline}")
+# Define the project name and C++ standard globally
+project(server-side-app VERSION 1.0)
+
+# Set the sources for the executable
+set(SOURCES src/main.cc)
+
+# Create the executable
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# Link the lib-market package to the executable
+target_link_libraries(${PROJECT_NAME} PRIVATE lib-market-static spdlog::spdlog_header_only)

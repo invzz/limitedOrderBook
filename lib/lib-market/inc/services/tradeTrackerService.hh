@@ -77,5 +77,5 @@ namespace market
         private:
         std::unordered_map<std::string, std::shared_ptr<TradeService>> tradeServices_;
     };
-}      // namespace market
+} // namespace market
 #endif // TRADE_TRACKER_SERVICE_HH

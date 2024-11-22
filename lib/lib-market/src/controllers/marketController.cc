@@ -44,4 +44,4 @@ namespace market
     }
 
     void MarketController::Stop() { server_->stop(); }
-}
+} // namespace market

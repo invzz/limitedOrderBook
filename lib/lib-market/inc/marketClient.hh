@@ -12,13 +12,15 @@ namespace market
     class MarketClient
     {
         public:
-        MarketClient(const std::string &serverAddress, std::string userId)
+        MarketClient(std::string userId)
             : context(1), subSocket(context, zmq::socket_type::sub), dealerSocket(context, zmq::socket_type::dealer), userId(userId)
         {
             orderBookService = std::make_shared<OrderBookService>();
+            spdlog::info("[ {} ] Connecting to [ {} ] - Subscribing to topic: {}", userId, CLIENT_PULL_ADDRESS, BOOK_TOPIC);
             subSocket.connect(CLIENT_PULL_ADDRESS);
             subSocket.set(zmq::sockopt::subscribe, BOOK_TOPIC);
             dealerSocket.set(zmq::sockopt::routing_id, userId);
+            spdlog::info("[ {} ] Connecting to [ {} ] - dealer => router", userId, CLIENT_ROUTER_ADDRESS);
             dealerSocket.connect(CLIENT_ROUTER_ADDRESS);
         }
 
@@ -138,4 +140,4 @@ namespace market
             spdlog::info("[ {} ] terminating thread {} ", userId, __func__);
         }
     };
-}
+} // namespace market

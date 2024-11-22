@@ -7,10 +7,7 @@ using namespace market;
 class SimpleBot : public MarketClient
 {
     public:
-    SimpleBot(const std::string &serverAddress, std::string userId, OrderType t) : MarketClient(serverAddress, userId), type(t)
-    {
-        rng.seed(std::random_device()());
-    }
+    SimpleBot(std::string userId, OrderType t) : MarketClient(userId), type(t) { rng.seed(std::random_device()()); }
 
     protected:
     void run() override

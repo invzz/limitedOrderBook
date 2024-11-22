@@ -4,8 +4,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Define the project name and C++ standard globally
 project(MarketSimulator VERSION 1.0)
 
-set(APPS marketServer marketBot  )
+add_subdirectory(marketBot)
+add_subdirectory(marketServer)
 
-foreach(APP ${APPS})
-    add_subdirectory(${APP})
-endforeach()

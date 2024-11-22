@@ -3,7 +3,7 @@
 class SmartBot : public MarketClient
 {
     public:
-    SmartBot(const std::string &serverAddress, std::string userId) : MarketClient(serverAddress, userId) { rng.seed(std::random_device()()); }
+    SmartBot( std::string userId) : MarketClient( userId) { rng.seed(std::random_device()()); }
 
     protected:
     void run() override
