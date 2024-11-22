@@ -98,11 +98,11 @@ The output path is set to `./dist`
 
 ## Dependencies
 
-1. ZeroMQ: concurrency framework / networking library
+1. [ZeroMQ](https://github.com/zeromq/libzmq): concurrency framework / networking library
    - **Reason**: Used for efficient message passing and communication between different components of the market server and clients.
-2. spdlog: Fast C++ logging library
+2. [spdlog](https://github.com/gabime/spdlog): Fast C++ logging library
    - **Reason**: Provides high-performance logging capabilities to track the application's behavior and debug issues.
-3. nlohmann-json: JSON for modern C++
+3. [nlohmann-json](https://github.com/nlohmann/json): JSON for modern C++
    - **Reason**: Used for parsing and serializing JSON data, which is essential for handling configuration files and communication protocols.
 
 ## Market design
