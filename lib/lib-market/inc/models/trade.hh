@@ -8,9 +8,7 @@ namespace market
     class Trade
     {
         public:
-        Trade(int tick, std::string buyerId, std::string sellerId, double price, int quantity)
-            : tick(tick), buyerId(buyerId), sellerId(sellerId), price(price), quantity(quantity)
-        {}
+        Trade(int tick, std::string buyerId, std::string sellerId, double price, int quantity) : tick(tick), buyerId(buyerId), sellerId(sellerId), price(price), quantity(quantity) {}
         int         getId() const { return id; }
         int         getTick() const { return tick; }
         std::string getBuyerId() const { return buyerId; }

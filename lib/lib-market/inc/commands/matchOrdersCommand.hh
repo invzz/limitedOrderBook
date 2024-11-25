@@ -13,15 +13,14 @@ namespace market
      *
      * This class inherits from the Command class with an integer template parameter.
      * It is used to execute the matching of orders in the market by invoking the
-     * match function on the MarketController instance.
+     * match function on the MarketController<T> instance.
      *
      * @tparam int The type of the parameter for the Command base class.
      */
-
-    class MatchOrdersCommand : public Command<int>
+    template <typename T> class MatchOrdersCommand : public Command<int, T>
     {
         public:
-        MatchOrdersCommand(std::shared_ptr<MarketController> controller) : controller_(controller) {}
+        MatchOrdersCommand(std::shared_ptr<MarketController<T>> controller) : controller_(controller) {}
 
         void execute(const int &tick) override
         {
@@ -34,6 +33,6 @@ namespace market
         }
 
         private:
-        std::shared_ptr<MarketController> controller_;
+        std::shared_ptr<MarketController<T>> controller_;
     };
 } // namespace market

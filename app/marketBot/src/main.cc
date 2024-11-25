@@ -3,9 +3,9 @@
 #include <thread>
 #include <iostream>
 
-#include "simpleBot.hh"
+#include "multiSimple.hh"
 #include "smartBot.hh"
-#include "marketClient.hh"
+#include "MultiMarketClient.hh"
 
 #include "orderType.hh"
 #include <spdlog/spdlog.h>
@@ -17,12 +17,16 @@ int main()
     try
         {
             // if compiled in debug mode, set the log level to debug
-            spdlog::set_level(spdlog::level::debug);
-            const auto                                *SERVER_ADDRESS = "tcp://localhost:5555";
-            std::vector<std::unique_ptr<MarketClient>> bots;
-            bots.push_back(std::make_unique<SimpleBot>("buyer", OrderType::BUY));
-            bots.push_back(std::make_unique<SimpleBot>("seller", OrderType::SELL));
-            bots.push_back(std::make_unique<SmartBot>("smarter"));
+            spdlog::set_level(spdlog::level::info);
+            const auto                                     *SERVER_ADDRESS = "tcp://localhost:5555";
+            std::vector<std::unique_ptr<MultiMarketClient>> bots;
+
+            for(int i = 0; i < 50; i++)
+                {
+                    bots.push_back(std::make_unique<MultiSimpleBot>("buyer" + std::to_string(i), OrderType::BUY));
+                    bots.push_back(std::make_unique<MultiSimpleBot>("seller" + std::to_string(i), OrderType::SELL));
+                }
+
             std::vector<std::thread> botThreads;
             // create a thread for each bot and start
             for(auto &bot : bots)

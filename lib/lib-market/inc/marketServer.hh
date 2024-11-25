@@ -15,6 +15,14 @@
 
 #include "common.hh"
 
+#ifndef MAIN_LOOP_SLEEP_TIME
+#define MAIN_LOOP_SLEEP_TIME 100
+#endif
+
+#ifndef ROUTER_SOCKET_TIMEOUT
+#define ROUTER_SOCKET_TIMEOUT 100
+#endif
+
 namespace market
 {
     class MarketServer : public std::enable_shared_from_this<MarketServer>
@@ -37,10 +45,10 @@ namespace market
         void liquidatePositions();
         void generateReport();
 
-        std::shared_ptr<OrderBookService>    orderBookService_;
-        std::shared_ptr<MarketController>    controller_;
-        std::shared_ptr<MarketMediator>      mediator_;
-        std::shared_ptr<TradeTrackerService> tradeTrackerService_;
+        std::shared_ptr<OrderBookService>               orderBookService_;
+        std::shared_ptr<MarketController<MarketServer>> controller_;
+        std::shared_ptr<MarketMediator<MarketServer>>   mediator_;
+        std::shared_ptr<TradeTrackerService>            tradeTrackerService_;
 
         zmq::context_t context_;
         zmq::socket_t  pubSocket_;

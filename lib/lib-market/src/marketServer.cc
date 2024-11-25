@@ -1,19 +1,12 @@
 #include "marketServer.hh"
 
-#ifndef MAIN_LOOP_SLEEP_TIME
-#define MAIN_LOOP_SLEEP_TIME 100
-#endif
-
-#ifndef ROUTER_SOCKET_TIMEOUT
-#define ROUTER_SOCKET_TIMEOUT 100
-#endif
-
 namespace market
 {
+    const std::string PRODUCT = "product";
     // clang-format off
 MarketServer::MarketServer()
-    : orderBookService_(std::make_shared<OrderBookService>()), 
-      mediator_(std::make_shared<MarketMediator>()),
+    : orderBookService_(std::make_shared<OrderBookService>(PRODUCT)), 
+      mediator_(std::make_shared<MarketMediator<MarketServer>>()),
       tradeTrackerService_(std::make_shared<TradeTrackerService>()), 
       context_(1),
       pubSocket_(context_, zmq::socket_type::pub), 
@@ -31,7 +24,7 @@ MarketServer::MarketServer()
 
     void MarketServer::initialize()
     {
-        controller_ = std::make_shared<MarketController>(orderBookService_, tradeTrackerService_, shared_from_this());
+        controller_ = std::make_shared<MarketController<MarketServer>>(orderBookService_, tradeTrackerService_, shared_from_this());
         mediator_->setController(controller_);
     }
 

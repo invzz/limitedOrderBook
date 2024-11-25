@@ -4,17 +4,17 @@
 #include <nlohmann/json.hpp>
 #include <zmq.hpp>
 #include <spdlog/spdlog.h>
-#include "orderBookService.hh"
+#include "MultiOrderBookService.hh"
 #include "common.hh"
 
 namespace market
 {
-    class MarketClient
+    class MultiMarketClient
     {
         public:
-        MarketClient(std::string userId) : context(1), subSocket(context, zmq::socket_type::sub), dealerSocket(context, zmq::socket_type::dealer), userId(userId)
+        MultiMarketClient(std::string userId) : context(1), subSocket(context, zmq::socket_type::sub), dealerSocket(context, zmq::socket_type::dealer), userId(userId)
         {
-            orderBookService = std::make_shared<OrderBookService>("product");
+            orderBookServices_ = std::make_shared<MultiOrderBookService>();
             spdlog::info("[ {} ] Connecting to [ {} ] - Subscribing to topic: {}", userId, CLIENT_PULL_ADDRESS, BOOK_TOPIC);
             subSocket.connect(CLIENT_PULL_ADDRESS);
             subSocket.set(zmq::sockopt::subscribe, BOOK_TOPIC);
@@ -22,6 +22,9 @@ namespace market
             spdlog::info("[ {} ] Connecting to [ {} ] - dealer => router", userId, CLIENT_ROUTER_ADDRESS);
             dealerSocket.connect(CLIENT_ROUTER_ADDRESS);
         }
+
+        std::shared_ptr<MultiOrderBookService> getOrderBookServices() const { return orderBookServices_; }
+        std::string                            getUserId() const { return userId; }
 
         virtual void run() = 0;
 
@@ -31,7 +34,7 @@ namespace market
         {
             spdlog::info("Starting Bot {}", userId);
             running   = true;
-            subThread = std::thread(&MarketClient::listenForOrderBookSub, this);
+            subThread = std::thread(&MultiMarketClient::listenForOrderBookSub, this);
         }
 
         void stop()
@@ -41,27 +44,40 @@ namespace market
             if(subThread.joinable()) { subThread.join(); }
             if(dealerThread.joinable()) { dealerThread.join(); }
         }
-        std::string getUserId() const { return userId; }
 
-        protected:
-        std::shared_ptr<OrderBookService> orderBookService;
-
-        void putOrder(const nlohmann::json &order)
+        void putOrder(const std::string &product, const nlohmann::json &order)
         {
-            std::string    message = "PUT_ORDER " + userId + " " + order.dump();
+            nlohmann::json productOrder;
+
+            productOrder["product"] = product;
+            productOrder["order"]   = order;
+
+            std::string    message = "PUT_ORDER " + userId + " " + productOrder.dump();
             zmq::message_t request(message.c_str(), message.size());
+
             dealerSocket.send(request, zmq::send_flags::dontwait);
+
             spdlog::debug("[ {} ] Sent order:\n{}", userId, order.dump(4));
             getMetrics();
         }
 
+        private:
+        std::shared_ptr<MultiOrderBookService> orderBookServices_;
+        std::atomic<bool>                      running{true};
+        zmq::context_t                         context;
+        zmq::socket_t                          subSocket;
+        zmq::socket_t                          dealerSocket;
+        std::thread                            subThread;
+        std::thread                            dealerThread;
+        std::string                            userId;
+
         void getMetrics()
         {
-            std::string    message = "GET_METRICS " + userId;
-            zmq::message_t request(message.c_str(), message.size());
-            dealerSocket.send(request, zmq::send_flags::dontwait);
-            spdlog::debug("[ {} ] Requested metrics", userId);
-            listenForMetrics();
+            // std::string    message = "GET_METRICS " + userId;
+            // zmq::message_t request(message.c_str(), message.size());
+            // dealerSocket.send(request, zmq::send_flags::dontwait);
+            // spdlog::debug("[ {} ] Requested metrics", userId);
+            // listenForMetrics();
         }
 
         void updateOrderBook(const std::string &update)
@@ -73,28 +89,20 @@ namespace market
                     if(orderBookUpdate.is_array() && orderBookUpdate.empty())
                         {
                             spdlog::debug("[ {} ] order book is empty", userId);
-                            orderBookService->clear();
+                            orderBookServices_->clear();
                         }
                     else
                         {
-                            orderBookService->updateOrderBook(orderBookUpdate, true);
-                            spdlog::debug("[ {} ] Updated order book:\n{}", userId, orderBookUpdate.dump());
+                            orderBookServices_->updateOrderBook(orderBookUpdate, true);
+                            spdlog::debug("[ {} ] Updated order book", userId);
                         }
                 }
             catch(const std::exception &e)
                 {
+                    orderBookServices_->clear();
                     spdlog::error("[ {} ] Failed to update order book: {}", userId, e.what());
                 }
         }
-
-        protected:
-        std::atomic<bool> running{true};
-        zmq::context_t    context;
-        zmq::socket_t     subSocket;
-        zmq::socket_t     dealerSocket;
-        std::thread       subThread;
-        std::thread       dealerThread;
-        std::string       userId;
 
         void listenForMetrics()
         {

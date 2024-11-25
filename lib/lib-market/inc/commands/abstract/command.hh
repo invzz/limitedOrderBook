@@ -27,7 +27,7 @@ namespace market
      *
      * @tparam T The type of the command body.
      */
-    template <typename T> class Command : public BaseCommand
+    template <typename T, typename S> class Command : public BaseCommand
     {
         public:
         virtual ~Command()                  = default;

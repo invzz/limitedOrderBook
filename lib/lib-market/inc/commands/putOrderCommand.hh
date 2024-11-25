@@ -5,6 +5,7 @@
 #include <any>
 #include "command.hh"
 #include "marketController.hh"
+#include "nlohmann/json.hpp"
 namespace market
 {
     /**
@@ -12,18 +13,18 @@ namespace market
      * @brief A command to put an order in the market.
      *
      * This class inherits from the Command class with a std::string type parameter.
-     * It is used to execute the action of putting an order in the market through the MarketController.
+     * It is used to execute the action of putting an order in the market through the MarketController<T>.
      *
      * @tparam std::string The type of the command parameter.
      */
-    class PutOrderCommand : public Command<std::string>
+    template <typename T> class PutOrderCommand : public Command<nlohmann::json, T>
     {
         public:
-        PutOrderCommand(std::shared_ptr<MarketController> controller) : controller_(controller) {}
+        PutOrderCommand(std::shared_ptr<MarketController<T>> controller) : controller_(controller) {}
 
-        void execute(const std::string &body) override { controller_->PutOrder(body); }
+        void execute(const nlohmann::json &body) override { controller_->PutOrder(body); }
 
         private:
-        std::shared_ptr<MarketController> controller_;
+        std::shared_ptr<MarketController<T>> controller_;
     };
 } // namespace market

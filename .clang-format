@@ -1,7 +1,7 @@
 SortIncludes: Never
 BasedOnStyle: Microsoft
 AccessModifierOffset: 0
-ColumnLimit: 160
+ColumnLimit: 240
 AlignAfterOpenBracket: Align
 AlignArrayOfStructures: Left
 AlignConsecutiveMacros: true

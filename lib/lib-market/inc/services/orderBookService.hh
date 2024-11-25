@@ -5,6 +5,8 @@
 #include <nlohmann/json.hpp>
 #include "order.hh"
 #include "priceLevelService.hh"
+#include "custom_formatter.hh"
+#include <spdlog/spdlog.h>
 #include "trade.hh"
 #include <vector>
 #include <atomic>
@@ -14,9 +16,9 @@ namespace market
     class OrderBookService
     {
         public:
-        OrderBookService() : nextId_(0)
+        OrderBookService(const std::string &product) : nextId_(0), product_(product)
         {
-            spdlog::info("[OrderBookService] Creating OrderBookService instance");
+            spdlog::info("[ {} ] Creating OrderBookService instance for product: {}", market::red(__func__), product);
             bids_ = std::make_shared<PriceLevelService>();
             asks_ = std::make_shared<PriceLevelService>();
         }
@@ -185,6 +187,8 @@ namespace market
             return trades;
         }
 
+        std::string getPoduct() const { return product_; }
+
         private:
         void updateOrders(const nlohmann::json &levelsData, std::shared_ptr<PriceLevelService> &priceLevelService)
         {
@@ -200,8 +204,7 @@ namespace market
                 }
         }
 
-        void matchOrders(int tick, std::vector<std::shared_ptr<Order>> &buyOrders, std::vector<std::shared_ptr<Order>> &sellOrders,
-                         std::vector<std::shared_ptr<Trade>> &trades)
+        void matchOrders(int tick, std::vector<std::shared_ptr<Order>> &buyOrders, std::vector<std::shared_ptr<Order>> &sellOrders, std::vector<std::shared_ptr<Trade>> &trades)
         {
             for(auto buyOrderIt = buyOrders.begin(); buyOrderIt != buyOrders.end();)
                 {
@@ -243,6 +246,7 @@ namespace market
         std::shared_ptr<PriceLevelService> bids_;
         std::shared_ptr<PriceLevelService> asks_;
         std::atomic<int>                   nextId_;
+        const std::string                  product_;
     };
 } // namespace market
 #endif

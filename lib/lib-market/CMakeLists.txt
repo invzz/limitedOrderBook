@@ -21,6 +21,8 @@ target_include_directories(${PROJECT_NAME}-static PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/services>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/mediators>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/models>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/routers>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/formatters>
 )
 
 target_link_libraries(${PROJECT_NAME}-static PUBLIC

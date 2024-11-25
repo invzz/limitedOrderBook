@@ -1,4 +1,5 @@
 #include "marketServer.hh"
+#include "MultiMarketServer.hh"
 #include <iostream>
 #include <thread>
 #include <exception>
@@ -11,11 +12,11 @@ int main()
 {
     try
         {
-            spdlog::set_level(spdlog::level::debug);
+            spdlog::set_level(spdlog::level::info);
 
             spdlog::info("*** [ main ] MARKET SERVER ***");
 
-            std::shared_ptr<MarketServer> server = std::make_shared<MarketServer>();
+            std::shared_ptr<market::MultiMarketServer> server = std::make_shared<market::MultiMarketServer>();
 
             server->initialize(); // Ensure the controller is initialized after the MarketServer is managed by a shared_ptr
 
